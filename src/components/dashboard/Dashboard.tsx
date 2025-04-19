@@ -141,7 +141,22 @@ export function Dashboard() {
   const [currentMealInfo, setCurrentMealInfo] = useState(() => getCurrentOrUpcomingMeal());
   const [selectedGoal, setSelectedGoal] = useState<FitnessGoal>('maintain');
   const [recommendations, setRecommendations] = useState<MealRecommendation | null>(null);
-  const { selectedMeals, nutritionTotals, addMeal, removeMeal } = useMealSelection();
+  const [selectedMeals, setSelectedMeals] = useState<Array<{ id: string; item: string }>>([]);
+  const [totalCalories, setTotalCalories] = useState(0);
+  const [totalProtein, setTotalProtein] = useState(0);
+  const { addMeal, removeMeal } = useMealSelection();
+
+  const handleAddMeal = (meal: MealPlan) => {
+    setSelectedMeals(prev => [...prev, { id: meal.id, item: meal.item }]);
+    setTotalCalories(prev => prev + meal.calories);
+    setTotalProtein(prev => prev + meal.protein);
+  };
+
+  const handleRemoveMeal = (mealId: string, calories: number, protein: number) => {
+    setSelectedMeals(prev => prev.filter(meal => meal.id !== mealId));
+    setTotalCalories(prev => prev - calories);
+    setTotalProtein(prev => prev - protein);
+  };
 
   const updateDefaultMealPlans = async () => {
     try {
@@ -397,13 +412,14 @@ export function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const getMealsForDate = (date: Date) => {
-    const dayName = format(date, 'EEEE');
-    console.log('🔍 CHECKING MEALS FOR:', dayName);
-    console.log('📅 TOTAL MEAL PLANS:', mealPlans.length);
+  const getMealsForDate = (date: Date): MealPlan[] => {
+    if (!mealPlans) return [];
     
-    // First filter by day
-    const dayMeals = mealPlans.filter(meal => {
+    const dayName = format(date, 'EEEE');
+    console.log('🔍 Checking meals for:', dayName);
+    console.log('📅 All meal plans:', mealPlans.length);
+    
+    const filteredMeals = mealPlans.filter(meal => {
       const mealDay = meal.day.trim().toLowerCase();
       const targetDay = dayName.toLowerCase();
       const matches = mealDay === targetDay;
@@ -418,66 +434,35 @@ export function Dashboard() {
       
       return matches;
     });
-
-    // Remove duplicates based on meal type and item
-    const uniqueMeals = dayMeals.reduce((acc, meal) => {
-      const key = `${meal.meal.toLowerCase()}-${meal.item}`;
-      if (!acc.has(key)) {
-        acc.set(key, meal);
-      }
-      return acc;
-    }, new Map());
-
-    const uniqueMealsArray = Array.from(uniqueMeals.values());
     
-    console.log('✅ FOUND UNIQUE MEALS FOR DAY:', uniqueMealsArray.length);
-    return uniqueMealsArray;
+    console.log('✨ Found meals for date:', filteredMeals.length);
+    return filteredMeals;
   };
 
   const getMealsByType = (meals: MealPlan[]) => {
-    console.log('🍽️ SORTING MEALS BY TYPE');
-    console.log('📝 INPUT MEALS COUNT:', meals.length);
+    console.log('🍽️ Sorting meals by type. Total meals:', meals.length);
     
     const grouped = {
-      breakfast: meals.filter(m => {
-        const mealType = m.meal.trim().toLowerCase();
-        const isBreakfast = mealType === 'breakfast';
-        if (isBreakfast) {
-          console.log('🍳 BREAKFAST:', m.item);
-        }
-        return isBreakfast;
+      breakfast: meals.filter(meal => meal.meal.toLowerCase() === 'breakfast'),
+      lunch: meals.filter(meal => meal.meal.toLowerCase() === 'lunch'),
+      snack: meals.filter(meal => {
+        const mealType = meal.meal.toLowerCase();
+        return mealType === 'snack' || mealType === 'snacks';
       }),
-      lunch: meals.filter(m => {
-        const mealType = m.meal.trim().toLowerCase();
-        const isLunch = mealType === 'lunch';
-        if (isLunch) {
-          console.log('🥪 LUNCH:', m.item);
-        }
-        return isLunch;
-      }),
-      snack: meals.filter(m => {
-        const mealType = m.meal.trim().toLowerCase();
-        const isSnack = mealType === 'snack';
-        if (isSnack) {
-          console.log('🍎 SNACK:', m.item);
-        }
-        return isSnack;
-      }),
-      dinner: meals.filter(m => {
-        const mealType = m.meal.trim().toLowerCase();
-        const isDinner = mealType === 'dinner';
-        if (isDinner) {
-          console.log('🍽️ DINNER:', m.item);
-        }
-        return isDinner;
-      })
+      dinner: meals.filter(meal => meal.meal.toLowerCase() === 'dinner')
     };
-
-    console.log('🎯 FINAL GROUPED MEALS:', {
-      breakfast: grouped.breakfast.map(m => m.item),
-      lunch: grouped.lunch.map(m => m.item),
-      snack: grouped.snack.map(m => m.item),
-      dinner: grouped.dinner.map(m => m.item)
+    
+    // Log each meal for debugging
+    console.log('🍳 Breakfast items:', grouped.breakfast.map(m => m.item));
+    console.log('🥪 Lunch items:', grouped.lunch.map(m => m.item));
+    console.log('🍎 Snack items:', grouped.snack.map(m => m.item));
+    console.log('🍽️ Dinner items:', grouped.dinner.map(m => m.item));
+    
+    console.log('✨ Grouped meals count:', {
+      breakfast: grouped.breakfast.length,
+      lunch: grouped.lunch.length,
+      snack: grouped.snack.length,
+      dinner: grouped.dinner.length
     });
     
     return grouped;
@@ -728,11 +713,11 @@ export function Dashboard() {
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-medium text-gray-500">Total Calories</p>
-                  <p className="text-2xl font-bold text-[#51B73B]">{nutritionTotals.calories}</p>
+                  <p className="text-2xl font-bold text-[#51B73B]">{totalCalories}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-medium text-gray-500">Total Protein</p>
-                  <p className="text-2xl font-bold text-[#51B73B]">{nutritionTotals.protein}g</p>
+                  <p className="text-2xl font-bold text-[#51B73B]">{totalProtein}g</p>
                 </div>
               </div>
               <Button
@@ -756,7 +741,12 @@ export function Dashboard() {
                   >
                     <span className="text-sm font-medium">{meal.item}</span>
                     <button
-                      onClick={() => removeMeal(meal.id)}
+                      onClick={() => {
+                        const mealPlan = mealPlans.find(m => m.id === meal.id);
+                        if (mealPlan) {
+                          handleRemoveMeal(meal.id, mealPlan.calories, mealPlan.protein);
+                        }
+                      }}
                       className="text-gray-400 hover:text-red-500"
                     >
                       <X className="h-4 w-4" />
@@ -938,19 +928,10 @@ export function Dashboard() {
                                   </p>
                                 </div>
                                 <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => addMeal({
-                                    id: `${meal.meal}-${meal.item}`,
-                                    item: meal.item,
-                                    calories: meal.calories,
-                                    protein: meal.protein,
-                                    carbs: meal.carbs,
-                                    fat: meal.fat
-                                  })}
-                                  className="h-8 w-8 text-[#51B73B] hover:text-[#3F8F2F]"
+                                  onClick={() => handleAddMeal(meal)}
+                                  className="bg-[#51B73B] hover:bg-[#3F8F2F] text-white"
                                 >
-                                  <Plus className="h-4 w-4" />
+                                  Add
                                 </Button>
                               </div>
                             </div>
