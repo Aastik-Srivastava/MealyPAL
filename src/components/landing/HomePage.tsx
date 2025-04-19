@@ -76,7 +76,7 @@ export function HomePage() {
               </div>
             </div>
             <p className="mt-4 text-sm text-gray-500">
-              Only ₹25/month after free trial
+              Only ₹30/month after free trial
             </p>
           </div>
         </div>
@@ -158,7 +158,7 @@ export function HomePage() {
                 <div className="ml-4">
                   <h3 className="text-lg font-medium text-[#51B73B]">Alex K.</h3>
                   <p className="mt-2 text-base text-gray-600">
-                    "Helped me stay consistent and simplified my diet! The AI suggestions are spot on."
+                    "This is exactly what I've been looking for! A smart meal planning assistant that understands my fitness goals would be a game-changer for my diet consistency."
                   </p>
                 </div>
               </div>
@@ -172,7 +172,7 @@ export function HomePage() {
                 <div className="ml-4">
                   <h3 className="text-lg font-medium text-[#51B73B]">Priya M.</h3>
                   <p className="mt-2 text-base text-gray-600">
-                    "It's like having a personal nutrition coach on my phone. The meal plans are so convenient!"
+                    "The concept of having an AI-powered nutrition coach in my pocket is brilliant! This could revolutionize how people approach their meal planning and health goals."
                   </p>
                 </div>
               </div>
@@ -186,7 +186,7 @@ export function HomePage() {
                 <div className="ml-4">
                   <h3 className="text-lg font-medium text-[#51B73B]">Rahul S.</h3>
                   <p className="mt-2 text-base text-gray-600">
-                    "The personalized recommendations have made meal planning effortless and effective."
+                    "I love the idea of personalized meal recommendations based on my fitness goals. This could make healthy eating so much more accessible and effective!"
                   </p>
                 </div>
               </div>
@@ -288,7 +288,7 @@ export function HomePage() {
                   </span>
                 </div>
                 <p className="mt-4 text-4xl font-extrabold text-gray-900">
-                  ₹25
+                  ₹30
                   <span className="text-base font-medium text-gray-500">/month</span>
                 </p>
                 <ul className="mt-6 space-y-4">
