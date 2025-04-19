@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { Loader2, AlertCircle, Calendar, Utensils, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
+import { Loader2, AlertCircle, Calendar, Utensils, ChevronLeft, ChevronRight, Plus, X, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format, isToday, parseISO } from 'date-fns';
 import { useUserProfile } from '../../hooks/useUserProfile';
@@ -17,9 +17,11 @@ import {
   PointElement,
   LineElement,
   Title,
-  Tooltip,
+  Tooltip as ChartTooltip,
   Legend
 } from 'chart.js';
+import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 ChartJS.register(
   CategoryScale,
@@ -27,7 +29,7 @@ ChartJS.register(
   PointElement,
   LineElement,
   Title,
-  Tooltip,
+  ChartTooltip,
   Legend
 );
 
@@ -51,6 +53,7 @@ interface MealPlan {
   protein: number;
   carbs: number;
   fat: number;
+  sugar: number;
   created_at: string;
   updated_at: string;
 }
@@ -171,6 +174,7 @@ export function Dashboard() {
   const [selectedMeals, setSelectedMeals] = useState<Array<{ id: string; item: string }>>([]);
   const [totalCalories, setTotalCalories] = useState(0);
   const [totalProtein, setTotalProtein] = useState(0);
+  const [showLowSugarOnly, setShowLowSugarOnly] = useState(false);
   const { addMeal, removeMeal } = useMealSelection();
   const [dailyCalories, setDailyCalories] = useState<DailyCalories[]>(() => {
     const saved = localStorage.getItem('dailyCalories');
@@ -256,7 +260,8 @@ export function Dashboard() {
         calories: 300, 
         protein: 10, 
         carbs: 45, 
-        fat: 8 
+        fat: 8,
+        sugar: 0
       },
       { 
         id: crypto.randomUUID(),
@@ -267,7 +272,8 @@ export function Dashboard() {
         calories: 450, 
         protein: 35, 
         carbs: 25, 
-        fat: 20 
+        fat: 20,
+        sugar: 0
       },
       { 
         id: crypto.randomUUID(),
@@ -278,7 +284,8 @@ export function Dashboard() {
         calories: 200, 
         protein: 15, 
         carbs: 10, 
-        fat: 12 
+        fat: 12,
+        sugar: 0
       },
       { 
         id: crypto.randomUUID(),
@@ -289,7 +296,8 @@ export function Dashboard() {
         calories: 550, 
         protein: 40, 
         carbs: 35, 
-        fat: 25 
+        fat: 25,
+        sugar: 0
       }
     ];
 
@@ -379,6 +387,7 @@ export function Dashboard() {
               protein: plan.protein,
               carbs: plan.carbs,
               fat: plan.fat,
+              sugar: plan.sugar,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             }));
@@ -460,21 +469,16 @@ export function Dashboard() {
     console.log('🔍 Checking meals for:', dayName);
     console.log('📅 All meal plans:', mealPlans.length);
     
-    // Create a Map to store unique meals by day and item
-    const uniqueMealsMap = new Map<string, MealPlan>();
+    let filteredMeals = mealPlans.filter(meal => 
+      meal.day.trim().toLowerCase() === dayName.toLowerCase()
+    );
+
+    if (showLowSugarOnly) {
+      filteredMeals = filteredMeals.filter(meal => meal.sugar <= 8);
+    }
     
-    mealPlans.forEach(meal => {
-      if (meal.day.trim().toLowerCase() === dayName.toLowerCase()) {
-        const key = `${meal.meal.toLowerCase()}-${meal.item}`;
-        if (!uniqueMealsMap.has(key)) {
-          uniqueMealsMap.set(key, meal);
-        }
-      }
-    });
-    
-    const uniqueMeals = Array.from(uniqueMealsMap.values());
-    console.log('✨ Found unique meals for date:', uniqueMeals.length);
-    return uniqueMeals;
+    console.log('✨ Found meals for date:', filteredMeals.length);
+    return filteredMeals;
   };
 
   const getMealsByType = (meals: MealPlan[]) => {
@@ -827,6 +831,24 @@ export function Dashboard() {
               </p>
             </div>
             <div className="flex items-center gap-8">
+              {/* Add Sugar Filter Toggle */}
+              <div className="flex items-center gap-2 border-r pr-6">
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={showLowSugarOnly}
+                      onCheckedChange={setShowLowSugarOnly}
+                      className="data-[state=checked]:bg-[#51B73B]"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Low Sugar Mode
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Show meals with 8g or less sugar
+                  </p>
+                </div>
+              </div>
               {/* Nutrition Summary */}
               <div className="flex gap-6 items-center border-r pr-6">
                 <div className="text-center">
@@ -1135,18 +1157,32 @@ export function Dashboard() {
                           {meals.map((meal) => (
                             <div key={meal.id} className="border-t pt-2">
                               <div className="flex justify-between items-center">
-                                <div>
+                                <div className="flex items-center gap-2">
                                   <h4 className="font-medium text-gray-900">{meal.item}</h4>
-                                  <p className="text-sm text-gray-500">
-                                    {meal.calories} kcal • {meal.protein}g protein • {meal.carbs}g carbs • {meal.fat}g fat
-                                  </p>
+                                  {meal.sugar > 8 && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger>
+                                          <AlertTriangle className="h-4 w-4 text-amber-500" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>High sugar content ({meal.sugar}g) - Not recommended for diabetics</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
                                 </div>
-                                <Button
-                                  onClick={() => handleAddMeal(meal)}
-                                  className="bg-[#51B73B] hover:bg-[#3F8F2F] text-white"
-                                >
-                                  Add
-                                </Button>
+                                <div className="flex items-center gap-4">
+                                  <p className="text-sm text-gray-500">
+                                    {meal.calories} kcal • {meal.protein}g protein • {meal.carbs}g carbs • {meal.fat}g fat • {meal.sugar}g sugar
+                                  </p>
+                                  <Button
+                                    onClick={() => handleAddMeal(meal)}
+                                    className="bg-[#51B73B] hover:bg-[#3F8F2F] text-white"
+                                  >
+                                    Add
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           ))}
