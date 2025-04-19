@@ -9,6 +9,27 @@ import { MealSelection } from './MealSelection';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useMealSelection } from '@/hooks/useMealSelection';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface UserProfile {
   bmr: number;
@@ -58,6 +79,12 @@ interface MealRecommendation {
 }
 
 type FitnessGoal = 'bulk' | 'cut' | 'maintain';
+
+interface DailyCalories {
+  date: string;
+  calories: number;
+  protein: number;
+}
 
 const MEAL_TIMES = {
   breakfast: { start: '07:00', end: '09:30', label: 'Breakfast' },
@@ -145,6 +172,20 @@ export function Dashboard() {
   const [totalCalories, setTotalCalories] = useState(0);
   const [totalProtein, setTotalProtein] = useState(0);
   const { addMeal, removeMeal } = useMealSelection();
+  const [dailyCalories, setDailyCalories] = useState<DailyCalories[]>(() => {
+    const saved = localStorage.getItem('dailyCalories');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [totalDailyCalories, setTotalDailyCalories] = useState<number>(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const saved = localStorage.getItem('dailyCalories');
+    if (saved) {
+      const data = JSON.parse(saved);
+      const todayData = data.find((d: DailyCalories) => d.date === today);
+      return todayData ? todayData.calories : 0;
+    }
+    return 0;
+  });
 
   const handleAddMeal = (meal: MealPlan) => {
     setSelectedMeals(prev => [...prev, { id: meal.id, item: meal.item }]);
@@ -635,6 +676,78 @@ export function Dashboard() {
     }
   };
 
+  const handleFinishMeal = () => {
+    if (selectedMeals.length === 0) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const newCalories = totalCalories;
+    const newProtein = totalProtein;
+
+    setDailyCalories(prev => {
+      const newData = [...prev];
+      const todayIndex = newData.findIndex(d => d.date === today);
+      
+      if (todayIndex >= 0) {
+        newData[todayIndex] = {
+          ...newData[todayIndex],
+          calories: newData[todayIndex].calories + newCalories,
+          protein: newData[todayIndex].protein + newProtein
+        };
+      } else {
+        newData.push({
+          date: today,
+          calories: newCalories,
+          protein: newProtein
+        });
+      }
+      
+      localStorage.setItem('dailyCalories', JSON.stringify(newData));
+      return newData;
+    });
+
+    setTotalDailyCalories(prev => prev + newCalories);
+    
+    // Reset current meal
+    setSelectedMeals([]);
+    setTotalCalories(0);
+    setTotalProtein(0);
+  };
+
+  const getCalorieGoal = () => {
+    if (!profile) return 2000;
+    
+    switch (selectedGoal) {
+      case 'bulk':
+        return Math.round(profile.tdee * 1.2); // 20% surplus
+      case 'cut':
+        return Math.round(profile.tdee * 0.8); // 20% deficit
+      default:
+        return Math.round(profile.tdee);
+    }
+  };
+
+  const calorieGoal = getCalorieGoal();
+  const remainingCalories = calorieGoal - totalDailyCalories;
+
+  const chartData = {
+    labels: ['Consumed', 'Remaining'],
+    datasets: [
+      {
+        label: 'Calories',
+        data: [totalDailyCalories, Math.max(0, remainingCalories)],
+        backgroundColor: [
+          'rgba(81, 183, 59, 0.5)',
+          'rgba(200, 200, 200, 0.5)'
+        ],
+        borderColor: [
+          'rgba(81, 183, 59, 1)',
+          'rgba(200, 200, 200, 1)'
+        ],
+        borderWidth: 1
+      }
+    ]
+  };
+
   if (authLoading || profileLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -756,6 +869,98 @@ export function Dashboard() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Daily Progress Section */}
+        <div className="mt-8">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Daily Progress</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Current Meal & Progress */}
+            <div className="lg:col-span-2">
+              <div className="bg-white shadow rounded-lg p-6">
+                <div className="grid grid-cols-2 gap-6 mb-6">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="text-sm font-medium text-gray-500">Current Meal</h3>
+                    <p className="mt-1 text-3xl font-semibold text-[#51B73B]">{totalCalories} kcal</p>
+                    <p className="mt-1 text-sm text-gray-500">{totalProtein}g protein</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="text-sm font-medium text-gray-500">Daily Total</h3>
+                    <p className="mt-1 text-3xl font-semibold text-[#51B73B]">{totalDailyCalories} kcal</p>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {Math.round((totalDailyCalories / calorieGoal) * 100)}% of goal
+                    </p>
+                  </div>
+                </div>
+                <div className="h-[200px]">
+                  <Line
+                    data={chartData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          display: true,
+                          position: 'bottom' as const
+                        }
+                      },
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                          max: calorieGoal,
+                          grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                          }
+                        },
+                        x: {
+                          grid: {
+                            display: false
+                          }
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Goal Progress */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Goal Progress</h3>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-500">Daily Goal</span>
+                    <span className="text-sm font-medium text-[#51B73B]">{calorieGoal} kcal</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-[#51B73B] h-2 rounded-full"
+                      style={{ width: `${Math.min(100, (totalDailyCalories / calorieGoal) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-500">Remaining</span>
+                    <span className="text-sm font-medium text-[#51B73B]">{Math.max(0, remainingCalories)} kcal</span>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {remainingCalories > 0 
+                      ? `You still need ${remainingCalories} kcal to reach your goal` 
+                      : 'You have reached your daily goal!'}
+                  </p>
+                </div>
+                <Button
+                  onClick={handleFinishMeal}
+                  disabled={selectedMeals.length === 0}
+                  className="w-full bg-[#51B73B] hover:bg-[#3F8F2F] text-white mt-4"
+                >
+                  Finish Meal
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Health Metrics */}
