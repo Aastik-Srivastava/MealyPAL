@@ -460,40 +460,49 @@ export function Dashboard() {
     console.log('🔍 Checking meals for:', dayName);
     console.log('📅 All meal plans:', mealPlans.length);
     
-    const filteredMeals = mealPlans.filter(meal => {
-      const mealDay = meal.day.trim().toLowerCase();
-      const targetDay = dayName.toLowerCase();
-      const matches = mealDay === targetDay;
-      
-      if (matches) {
-        console.log('✅ MATCHING MEAL:', {
-          day: mealDay,
-          meal: meal.meal,
-          item: meal.item
-        });
+    // Create a Map to store unique meals by day and item
+    const uniqueMealsMap = new Map<string, MealPlan>();
+    
+    mealPlans.forEach(meal => {
+      if (meal.day.trim().toLowerCase() === dayName.toLowerCase()) {
+        const key = `${meal.meal.toLowerCase()}-${meal.item}`;
+        if (!uniqueMealsMap.has(key)) {
+          uniqueMealsMap.set(key, meal);
+        }
       }
-      
-      return matches;
     });
     
-    console.log('✨ Found meals for date:', filteredMeals.length);
-    return filteredMeals;
+    const uniqueMeals = Array.from(uniqueMealsMap.values());
+    console.log('✨ Found unique meals for date:', uniqueMeals.length);
+    return uniqueMeals;
   };
 
   const getMealsByType = (meals: MealPlan[]) => {
     console.log('🍽️ Sorting meals by type. Total meals:', meals.length);
     
+    // Create a Map to store unique meals by type and item
+    const uniqueMealsMap = new Map<string, MealPlan>();
+    
+    meals.forEach(meal => {
+      const key = `${meal.meal.toLowerCase()}-${meal.item}`;
+      if (!uniqueMealsMap.has(key)) {
+        uniqueMealsMap.set(key, meal);
+      }
+    });
+    
+    const uniqueMeals = Array.from(uniqueMealsMap.values());
+    
     const grouped = {
-      breakfast: meals.filter(meal => meal.meal.toLowerCase() === 'breakfast'),
-      lunch: meals.filter(meal => meal.meal.toLowerCase() === 'lunch'),
-      snack: meals.filter(meal => {
+      breakfast: uniqueMeals.filter(meal => meal.meal.toLowerCase() === 'breakfast'),
+      lunch: uniqueMeals.filter(meal => meal.meal.toLowerCase() === 'lunch'),
+      snack: uniqueMeals.filter(meal => {
         const mealType = meal.meal.toLowerCase();
         return mealType === 'snack' || mealType === 'snacks';
       }),
-      dinner: meals.filter(meal => meal.meal.toLowerCase() === 'dinner')
+      dinner: uniqueMeals.filter(meal => meal.meal.toLowerCase() === 'dinner')
     };
     
-    // Log each meal for debugging
+    // Log each meal type for debugging
     console.log('🍳 Breakfast items:', grouped.breakfast.map(m => m.item));
     console.log('🥪 Lunch items:', grouped.lunch.map(m => m.item));
     console.log('🍎 Snack items:', grouped.snack.map(m => m.item));
