@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { Loader2 } from 'lucide-react'
+import { hasCompletedBMRCalculation } from '../../lib/supabaseClient'
 
 export function SignIn() {
   const { signIn, loading, error } = useAuth()
@@ -24,8 +25,15 @@ export function SignIn() {
     e.preventDefault()
     
     try {
-      await signIn(formData.email, formData.password)
-      navigate('/bmr-calculator')
+      const { user } = await signIn(formData.email, formData.password)
+      if (user) {
+        const hasBMR = await hasCompletedBMRCalculation(user.id)
+        if (hasBMR) {
+          navigate('/dashboard')
+        } else {
+          navigate('/bmr-calculator')
+        }
+      }
     } catch (err) {
       // Error is handled by the useAuth hook
     }

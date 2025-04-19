@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { Loader2, AlertCircle, Calendar, Utensils, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, AlertCircle, Calendar, Utensils, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format, isToday, parseISO } from 'date-fns';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import { useAuth } from '../../hooks/useAuth';
+import { MealSelection } from './MealSelection';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { useMealSelection } from '@/hooks/useMealSelection';
 
 interface UserProfile {
   bmr: number;
@@ -137,6 +141,7 @@ export function Dashboard() {
   const [currentMealInfo, setCurrentMealInfo] = useState(() => getCurrentOrUpcomingMeal());
   const [selectedGoal, setSelectedGoal] = useState<FitnessGoal>('maintain');
   const [recommendations, setRecommendations] = useState<MealRecommendation | null>(null);
+  const { selectedMeals, nutritionTotals, addMeal, removeMeal } = useMealSelection();
 
   const updateDefaultMealPlans = async () => {
     try {
@@ -705,20 +710,62 @@ export function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="px-4 py-6 sm:px-0 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Welcome back, {user?.email}
-            </p>
+        {/* Header with Nutrition Summary */}
+        <div className="bg-white shadow-lg rounded-lg p-4 mb-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <p className="mt-1 text-sm text-gray-500">
+                Welcome back, {user?.email}
+              </p>
+            </div>
+            <div className="flex items-center gap-8">
+              {/* Nutrition Summary */}
+              <div className="flex gap-6 items-center border-r pr-6">
+                <div className="text-center">
+                  <p className="text-sm font-medium text-gray-500">Selected Items</p>
+                  <p className="text-2xl font-bold text-[#51B73B]">{selectedMeals.length}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-gray-500">Total Calories</p>
+                  <p className="text-2xl font-bold text-[#51B73B]">{nutritionTotals.calories}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-gray-500">Total Protein</p>
+                  <p className="text-2xl font-bold text-[#51B73B]">{nutritionTotals.protein}g</p>
+                </div>
+              </div>
+              <Button
+                variant="destructive"
+                onClick={handleSignOut}
+                className="bg-red-500 hover:bg-red-600"
+              >
+                Sign Out
+              </Button>
+            </div>
           </div>
-          <button
-            onClick={handleSignOut}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-          >
-            Sign Out
-          </button>
+
+          {/* Selected Items List */}
+          {selectedMeals.length > 0 && (
+            <div className="mt-4 border-t pt-4">
+              <div className="flex flex-wrap gap-2">
+                {selectedMeals.map((meal) => (
+                  <div
+                    key={meal.id}
+                    className="inline-flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1"
+                  >
+                    <span className="text-sm font-medium">{meal.item}</span>
+                    <button
+                      onClick={() => removeMeal(meal.id)}
+                      className="text-gray-400 hover:text-red-500"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Health Metrics */}
@@ -789,16 +836,6 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="mt-8 flex justify-end">
-          <button
-            onClick={() => window.location.href = '/bmr-calculator'}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#51B73B] hover:bg-[#3F8F2F] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#51B73B]"
-          >
-            Update Health Metrics
-          </button>
-        </div>
-
         {/* Main Content */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Calendar Sidebar */}
@@ -839,7 +876,7 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* Meal Plans */}
+          {/* Meal Plans and Recommendations */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow-lg p-6">
               <div className="flex justify-between items-center mb-6">
@@ -893,13 +930,28 @@ export function Dashboard() {
                         <div className="space-y-2">
                           {meals.map((meal) => (
                             <div key={meal.id} className="border-t pt-2">
-                              <div className="flex justify-between items-start">
+                              <div className="flex justify-between items-center">
                                 <div>
                                   <h4 className="font-medium text-gray-900">{meal.item}</h4>
                                   <p className="text-sm text-gray-500">
                                     {meal.calories} kcal • {meal.protein}g protein • {meal.carbs}g carbs • {meal.fat}g fat
                                   </p>
                                 </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => addMeal({
+                                    id: `${meal.meal}-${meal.item}`,
+                                    item: meal.item,
+                                    calories: meal.calories,
+                                    protein: meal.protein,
+                                    carbs: meal.carbs,
+                                    fat: meal.fat
+                                  })}
+                                  className="h-8 w-8 text-[#51B73B] hover:text-[#3F8F2F]"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </Button>
                               </div>
                             </div>
                           ))}
@@ -912,106 +964,106 @@ export function Dashboard() {
                 })}
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Goal Selection and Recommendations Section - Now Full Width */}
-        <div className="mt-8">
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">AI Meal Recommendations</h2>
-            
-            {/* Goal Selection */}
-            <div className="flex flex-col space-y-4 mb-8">
-              <h3 className="text-lg font-medium text-gray-900">Select Your Goal</h3>
-              <div className="flex gap-4">
-                {(['bulk', 'cut', 'maintain'] as FitnessGoal[]).map((goal) => (
-                  <button
-                    key={goal}
-                    onClick={() => setSelectedGoal(goal)}
-                    className={`px-12 py-3 rounded-lg font-medium transition-colors ${
-                      selectedGoal === goal
-                        ? 'bg-[#51B73B] text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {goal.charAt(0).toUpperCase() + goal.slice(1)}
-                  </button>
-                ))}
-              </div>
-              <p className="text-sm text-gray-600">{GOAL_DESCRIPTIONS[selectedGoal]}</p>
-            </div>
-
-            {/* Recommendations */}
-            {recommendations && (
-              <div className="space-y-12">
-                {/* Macros Overview */}
-                <div className="grid grid-cols-4 gap-8">
-                  <div className="bg-gray-50 p-8 rounded-lg">
-                    <h4 className="font-medium text-gray-900">Daily Calories</h4>
-                    <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.calories}</p>
-                    <p className="text-sm text-gray-500 mt-1">kcal</p>
+            {/* AI Recommendations Section */}
+            <div className="mt-8">
+              <div className="bg-white rounded-lg shadow-lg p-8">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">AI Meal Recommendations</h2>
+                
+                {/* Goal Selection */}
+                <div className="flex flex-col space-y-4 mb-8">
+                  <h3 className="text-lg font-medium text-gray-900">Select Your Goal</h3>
+                  <div className="flex gap-4">
+                    {(['bulk', 'cut', 'maintain'] as FitnessGoal[]).map((goal) => (
+                      <button
+                        key={goal}
+                        onClick={() => setSelectedGoal(goal)}
+                        className={`px-12 py-3 rounded-lg font-medium transition-colors ${
+                          selectedGoal === goal
+                            ? 'bg-[#51B73B] text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {goal.charAt(0).toUpperCase() + goal.slice(1)}
+                      </button>
+                    ))}
                   </div>
-                  <div className="bg-gray-50 p-8 rounded-lg">
-                    <h4 className="font-medium text-gray-900">Protein</h4>
-                    <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.protein}g</p>
-                    <p className="text-sm text-gray-500 mt-1">{Math.round(recommendations.macros.protein * 4)} kcal</p>
-                  </div>
-                  <div className="bg-gray-50 p-8 rounded-lg">
-                    <h4 className="font-medium text-gray-900">Carbs</h4>
-                    <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.carbs}g</p>
-                    <p className="text-sm text-gray-500 mt-1">{Math.round(recommendations.macros.carbs * 4)} kcal</p>
-                  </div>
-                  <div className="bg-gray-50 p-8 rounded-lg">
-                    <h4 className="font-medium text-gray-900">Fat</h4>
-                    <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.fat}g</p>
-                    <p className="text-sm text-gray-500 mt-1">{Math.round(recommendations.macros.fat * 9)} kcal</p>
-                  </div>
+                  <p className="text-sm text-gray-600">{GOAL_DESCRIPTIONS[selectedGoal]}</p>
                 </div>
 
-                {/* Meal-Specific Recommendations */}
-                <div className="grid grid-cols-4 gap-8">
-                  {Object.entries(recommendations.mealSpecific).map(([meal, foods]) => (
-                    <div key={meal} className="bg-gray-50 p-8 rounded-lg">
-                      <h3 className="text-lg font-medium text-gray-900 capitalize mb-4">{meal}</h3>
-                      <ul className="space-y-3">
-                        {foods.map((food, index) => (
-                          <li key={index} className="flex items-center">
-                            <span className="w-2 h-2 bg-[#51B73B] rounded-full mr-2"></span>
-                            <span className="text-gray-600">{food}</span>
-                          </li>
-                        ))}
-                      </ul>
+                {/* Recommendations */}
+                {recommendations && (
+                  <div className="space-y-12">
+                    {/* Macros Overview */}
+                    <div className="grid grid-cols-4 gap-8">
+                      <div className="bg-gray-50 p-8 rounded-lg">
+                        <h4 className="font-medium text-gray-900">Daily Calories</h4>
+                        <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.calories}</p>
+                        <p className="text-sm text-gray-500 mt-1">kcal</p>
+                      </div>
+                      <div className="bg-gray-50 p-8 rounded-lg">
+                        <h4 className="font-medium text-gray-900">Protein</h4>
+                        <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.protein}g</p>
+                        <p className="text-sm text-gray-500 mt-1">{Math.round(recommendations.macros.protein * 4)} kcal</p>
+                      </div>
+                      <div className="bg-gray-50 p-8 rounded-lg">
+                        <h4 className="font-medium text-gray-900">Carbs</h4>
+                        <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.carbs}g</p>
+                        <p className="text-sm text-gray-500 mt-1">{Math.round(recommendations.macros.carbs * 4)} kcal</p>
+                      </div>
+                      <div className="bg-gray-50 p-8 rounded-lg">
+                        <h4 className="font-medium text-gray-900">Fat</h4>
+                        <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.fat}g</p>
+                        <p className="text-sm text-gray-500 mt-1">{Math.round(recommendations.macros.fat * 9)} kcal</p>
+                      </div>
                     </div>
-                  ))}
-                </div>
 
-                {/* Tips and Modifications */}
-                <div className="grid grid-cols-2 gap-8">
-                  <div className="bg-gray-50 p-8 rounded-lg">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Tips</h3>
-                    <ul className="space-y-3">
-                      {recommendations.tips.map((tip, index) => (
-                        <li key={index} className="flex items-center">
-                          <span className="w-2 h-2 bg-[#51B73B] rounded-full mr-2"></span>
-                          <span className="text-gray-600">{tip}</span>
-                        </li>
+                    {/* Meal-Specific Recommendations */}
+                    <div className="grid grid-cols-4 gap-8">
+                      {Object.entries(recommendations.mealSpecific).map(([meal, foods]) => (
+                        <div key={meal} className="bg-gray-50 p-8 rounded-lg">
+                          <h3 className="text-lg font-medium text-gray-900 capitalize mb-4">{meal}</h3>
+                          <ul className="space-y-3">
+                            {foods.map((food, index) => (
+                              <li key={index} className="flex items-center">
+                                <span className="w-2 h-2 bg-[#51B73B] rounded-full mr-2"></span>
+                                <span className="text-gray-600">{food}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
+
+                    {/* Tips and Modifications */}
+                    <div className="grid grid-cols-2 gap-8">
+                      <div className="bg-gray-50 p-8 rounded-lg">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Tips</h3>
+                        <ul className="space-y-3">
+                          {recommendations.tips.map((tip, index) => (
+                            <li key={index} className="flex items-center">
+                              <span className="w-2 h-2 bg-[#51B73B] rounded-full mr-2"></span>
+                              <span className="text-gray-600">{tip}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="bg-gray-50 p-8 rounded-lg">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Modifications</h3>
+                        <ul className="space-y-3">
+                          {recommendations.modifications.map((mod, index) => (
+                            <li key={index} className="flex items-center">
+                              <span className="w-2 h-2 bg-[#51B73B] rounded-full mr-2"></span>
+                              <span className="text-gray-600">{mod}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
                   </div>
-                  <div className="bg-gray-50 p-8 rounded-lg">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Modifications</h3>
-                    <ul className="space-y-3">
-                      {recommendations.modifications.map((mod, index) => (
-                        <li key={index} className="flex items-center">
-                          <span className="w-2 h-2 bg-[#51B73B] rounded-full mr-2"></span>
-                          <span className="text-gray-600">{mod}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

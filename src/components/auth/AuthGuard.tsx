@@ -1,8 +1,7 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useUserProfile } from '../../hooks/useUserProfile'
-import { Loader2 } from 'lucide-react'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -51,13 +50,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
     // No user, redirect to sign in
     if (!user) {
       console.log('AuthGuard: No user, redirecting to sign-in');
-      navigate('/sign-in');
+      navigate('/signin', { replace: true });
       isChecking.current = false;
       return;
     }
 
     // Don't redirect if on public routes
-    if (['/', '/sign-in', '/sign-up'].includes(location.pathname)) {
+    if (['/', '/signin', '/signup'].includes(location.pathname)) {
       console.log('AuthGuard: On public route, no redirect needed');
       isChecking.current = false;
       return;
@@ -73,24 +72,21 @@ export function AuthGuard({ children }: AuthGuardProps) {
     // For protected routes, check BMR completion
     if (!hasCompletedBMR) {
       console.log('AuthGuard: BMR not completed, redirecting to calculator');
-      navigate('/bmr-calculator');
+      navigate('/bmr-calculator', { replace: true });
       isChecking.current = false;
       return;
     }
 
-    console.log('AuthGuard: All checks passed');
     isChecking.current = false;
-  }, [user, profile, authLoading, profileLoading, hasCompletedBMR, navigate, location.pathname])
+  }, [user, profile, authLoading, profileLoading, hasCompletedBMR, location.pathname, navigate]);
 
-  // Show loading state while checking auth or loading data
   if (authLoading || profileLoading) {
-    console.log('AuthGuard: Showing loading state');
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#51B73B]" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#51B73B]"></div>
       </div>
-    )
+    );
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 } 

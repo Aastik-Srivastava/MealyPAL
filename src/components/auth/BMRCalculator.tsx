@@ -61,7 +61,7 @@ export function BMRCalculator() {
       });
 
       console.log('BMRCalculator: Profile updated successfully');
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       console.error('BMRCalculator: Error updating profile:', err);
       setError('Failed to update profile. Please try again.');
