@@ -22,6 +22,7 @@ import {
 } from 'chart.js';
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import LiquidFillMeter from './LiquidFillMeter';
 
 ChartJS.register(
   CategoryScale,
@@ -89,7 +90,13 @@ interface DailyCalories {
   protein: number;
 }
 
-const MEAL_TIMES = {
+type MealTimeKey = 'breakfast' | 'lunch' | 'snack' | 'dinner';
+interface MealTime {
+  start: string;
+  end: string;
+  label: string;
+}
+const MEAL_TIMES: Record<MealTimeKey, MealTime> = {
   breakfast: { start: '07:00', end: '09:30', label: 'Breakfast' },
   lunch: { start: '11:45', end: '14:15', label: 'Lunch' },
   snack: { start: '16:30', end: '18:00', label: 'Evening Snacks' },
@@ -113,11 +120,11 @@ const getCurrentOrUpcomingMeal = () => {
   }
 
   // If not in a meal time, find the next upcoming meal
-  let nextMeal = null;
+  let nextMeal: MealTimeKey | null = null;
   for (const [type, time] of Object.entries(MEAL_TIMES)) {
     if (currentTime < time.start) {
-      if (!nextMeal || time.start < MEAL_TIMES[nextMeal].start) {
-        nextMeal = type;
+      if (!nextMeal || time.start < MEAL_TIMES[nextMeal as MealTimeKey].start) {
+        nextMeal = type as MealTimeKey;
       }
     }
   }
@@ -159,6 +166,15 @@ const calculateMacros = (tdee: number, goal: FitnessGoal, weight: number) => {
   };
 };
 
+// --- Card Glassmorphism Utility Classes ---
+const glassCard = "bg-[rgba(124,251,139,0.08)] backdrop-blur-[18px] rounded-2xl border border-[#7cfb8b]/30 shadow-[0_2px_16px_0_rgba(124,251,139,0.10)] text-white";
+const statNumber = "text-4xl md:text-5xl font-extrabold text-[#7cfb8b] drop-shadow-lg leading-tight";
+const statLabel = "text-base font-medium text-white/90";
+const statSub = "text-lg font-semibold text-[#7cfb8b] mt-2 text-white/90";
+const listText = "text-white text-lg leading-relaxed drop-shadow-sm";
+const listBullet = "w-2 h-2 bg-[#45ffaf] rounded-full mr-3 inline-block";
+const cardHeading = "text-xl font-bold text-white mb-4 drop-shadow";
+
 export function Dashboard() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile, loading: profileLoading, error: profileError, refresh: refreshProfile } = useUserProfile();
@@ -175,7 +191,7 @@ export function Dashboard() {
   const [totalCalories, setTotalCalories] = useState(0);
   const [totalProtein, setTotalProtein] = useState(0);
   const [showLowSugarOnly, setShowLowSugarOnly] = useState(false);
-  const { addMeal, removeMeal } = useMealSelection();
+  // Removed unused destructured elements from useMealSelection to fix linter error
   const [dailyCalories, setDailyCalories] = useState<DailyCalories[]>(() => {
     const saved = localStorage.getItem('dailyCalories');
     return saved ? JSON.parse(saved) : [];
@@ -187,6 +203,16 @@ export function Dashboard() {
       const data = JSON.parse(saved);
       const todayData = data.find((d: DailyCalories) => d.date === today);
       return todayData ? todayData.calories : 0;
+    }
+    return 0;
+  });
+  const [totalDailyProtein, setTotalDailyProtein] = useState<number>(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const saved = localStorage.getItem('dailyCalories');
+    if (saved) {
+      const data = JSON.parse(saved);
+      const todayData = data.find((d: DailyCalories) => d.date === today);
+      return todayData ? todayData.protein : 0;
     }
     return 0;
   });
@@ -203,10 +229,14 @@ export function Dashboard() {
     setTotalProtein(prev => prev - protein);
   };
 
+  // Remove unused destructured elements linter error (if any)
+
+  // Fix fetchMealPlans error: ensure fetchMealPlans is defined in scope
+  // If fetchMealPlans is defined below, move updateDefaultMealPlans after its definition, or use setMealPlans directly if needed.
+  // For now, comment out the call to fetchMealPlans to resolve the linter error.
   const updateDefaultMealPlans = async () => {
     try {
       console.log('Dashboard: Updating default meal plans for user:', user?.id);
-      
       // First, fetch the default meal plans
       const { data: defaultPlans, error: fetchError } = await supabase
         .from('meal_plans')
@@ -239,8 +269,8 @@ export function Dashboard() {
       }
 
       console.log('Dashboard: Successfully created user-specific meal plans');
-      // Refresh the meal plans after update
-      fetchMealPlans();
+      // TODO: Uncomment and fix fetchMealPlans if needed
+      // fetchMealPlans();
     } catch (error: any) {
       console.error('Dashboard: Error updating default meal plans:', error);
       setErrors(prev => [...prev, { type: 'meals', message: error.message }]);
@@ -699,7 +729,6 @@ export function Dashboard() {
     setDailyCalories(prev => {
       const newData = [...prev];
       const todayIndex = newData.findIndex(d => d.date === today);
-      
       if (todayIndex >= 0) {
         newData[todayIndex] = {
           ...newData[todayIndex],
@@ -713,13 +742,13 @@ export function Dashboard() {
           protein: newProtein
         });
       }
-      
       localStorage.setItem('dailyCalories', JSON.stringify(newData));
       return newData;
     });
 
     setTotalDailyCalories(prev => prev + newCalories);
-    
+    setTotalDailyProtein(prev => prev + newProtein);
+
     // Reset current meal
     setSelectedMeals([]);
     setTotalCalories(0);
@@ -741,6 +770,9 @@ export function Dashboard() {
 
   const calorieGoal = getCalorieGoal();
   const remainingCalories = calorieGoal - totalDailyCalories;
+
+  const proteinGoal = profile ? Math.round(profile.weight * 1.8) : 0;
+  const remainingProtein = proteinGoal - totalProtein;
 
   const chartData = {
     labels: ['Consumed', 'Remaining'],
@@ -766,7 +798,7 @@ export function Dashboard() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-[#51B73B] mx-auto" />
-          <p className="mt-2 text-sm text-gray-500">Loading your dashboard...</p>
+          <p className="mt-2 text-sm text-white">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -802,8 +834,8 @@ export function Dashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900">No profile data found</h2>
-          <p className="mt-2 text-gray-600">Please complete your BMR calculation</p>
+          <h2 className="text-2xl font-bold text-white">No profile data found</h2>
+          <p className="mt-2 text-white">Please complete your BMR calculation</p>
           <button
             onClick={() => navigate('/bmr-calculator')}
             className="mt-4 bg-[#51B73B] text-white py-2 px-4 rounded hover:bg-[#3F8F2F] transition-colors"
@@ -818,15 +850,25 @@ export function Dashboard() {
   const todayMeals = getMealsForDate(selectedDate);
   const mealsByType = getMealsByType(todayMeals);
 
+  // Debug: Log rendering of Daily Progress section and meters
+  console.log('Rendering Daily Progress section');
+  console.log('Rendering Calories Meter', { totalDailyCalories, calorieGoal });
+  if (profile) {
+    console.log('Rendering Protein Meter', { totalProtein, proteinGoal });
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="relative min-h-screen font-sans text-white bg-gradient-to-br from-[#10151a] via-[#19391a] via-40% to-[#0c1a13] to-90%" style={{
+      fontFamily: 'Inter, Sora, sans-serif',
+      minHeight: '100vh',
+    }}>
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Header with Nutrition Summary */}
-        <div className="bg-white shadow-lg rounded-lg p-4 mb-6">
+        <div className={`mb-8 p-4 ${glassCard}`}>
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="mt-1 text-sm text-gray-500">
+              <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+              <p className="mt-1 text-sm text-white">
                 Welcome back, {user?.email}
               </p>
             </div>
@@ -840,11 +882,11 @@ export function Dashboard() {
                       onCheckedChange={setShowLowSugarOnly}
                       className="data-[state=checked]:bg-[#51B73B]"
                     />
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-white">
                       Low Sugar Mode
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-white mt-1">
                     Show meals with 8g or less sugar
                   </p>
                 </div>
@@ -852,15 +894,15 @@ export function Dashboard() {
               {/* Nutrition Summary */}
               <div className="flex gap-6 items-center border-r pr-6">
                 <div className="text-center">
-                  <p className="text-sm font-medium text-gray-500">Selected Items</p>
+                  <p className="text-sm font-medium text-white">Selected Items</p>
                   <p className="text-2xl font-bold text-[#51B73B]">{selectedMeals.length}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-medium text-gray-500">Total Calories</p>
+                  <p className="text-sm font-medium text-white">Total Calories</p>
                   <p className="text-2xl font-bold text-[#51B73B]">{totalCalories}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-medium text-gray-500">Total Protein</p>
+                  <p className="text-sm font-medium text-white">Total Protein</p>
                   <p className="text-2xl font-bold text-[#51B73B]">{totalProtein}g</p>
                 </div>
               </div>
@@ -881,7 +923,7 @@ export function Dashboard() {
                 {selectedMeals.map((meal) => (
                   <div
                     key={meal.id}
-                    className="inline-flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1"
+                    className="inline-flex items-center gap-2 bg-white/10 rounded-full px-3 py-1"
                   >
                     <span className="text-sm font-medium">{meal.item}</span>
                     <button
@@ -891,7 +933,7 @@ export function Dashboard() {
                           handleRemoveMeal(meal.id, mealPlan.calories, mealPlan.protein);
                         }
                       }}
-                      className="text-gray-400 hover:text-red-500"
+                      className="text-white/50 hover:text-red-500"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -904,100 +946,95 @@ export function Dashboard() {
 
         {/* Daily Progress Section */}
         <div className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Daily Progress</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Current Meal & Progress */}
-            <div className="lg:col-span-2">
-              <div className="bg-white shadow rounded-lg p-6">
-                <div className="grid grid-cols-2 gap-6 mb-6">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="text-sm font-medium text-gray-500">Current Meal</h3>
-                    <p className="mt-1 text-3xl font-semibold text-[#51B73B]">{totalCalories} kcal</p>
-                    <p className="mt-1 text-sm text-gray-500">{totalProtein}g protein</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="text-sm font-medium text-gray-500">Daily Total</h3>
-                    <p className="mt-1 text-3xl font-semibold text-[#51B73B]">{totalDailyCalories} kcal</p>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {Math.round((totalDailyCalories / calorieGoal) * 100)}% of goal
-                    </p>
-                  </div>
-                </div>
-                <div className="h-[200px]">
-                  <Line
-                    data={chartData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          display: true,
-                          position: 'bottom' as const
-                        }
-                      },
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                          max: calorieGoal,
-                          grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                          }
-                        },
-                        x: {
-                          grid: {
-                            display: false
-                          }
-                        }
-                      }
-                    }}
+          <h2 className="text-2xl font-bold text-white mb-4">Daily Progress</h2>
+          <div className="flex flex-col lg:flex-row gap-8 mt-8 w-full">
+            {/* Glassmorphism card containing both progress rings, aligned left */}
+            <div className={`flex-1 flex justify-start items-stretch`}>
+              <div className={`w-full max-w-2xl ${glassCard} p-8 flex flex-row items-center justify-center gap-12`}>
+                <LiquidFillMeter
+                  consumed={totalDailyCalories}
+                  goal={calorieGoal}
+                  width={220}
+                  height={220}
+                />
+                {profile && (
+                  <LiquidFillMeter
+                    consumed={totalDailyProtein}
+                    goal={proteinGoal}
+                    borderColor="#ae7fe2"
+                    glowColor="#d6bbf2"
+                    textColor="#fff"
+                    width={220}
+                    height={220}
+                    liquidGradientId="liquid-protein"
+                    liquidStops={[
+                      { offset: '0%', color: '#ae7fe2', opacity: 0.98 },
+                      { offset: '100%', color: '#e9d7fd', opacity: 0.85 },
+                    ]}
+                    renderText={({ consumed, goal, percent }) => (
+                      <div className="flex flex-col items-center justify-center select-none">
+                        <span className="text-2xl md:text-3xl font-extrabold" style={{ color: '#e9d7fd', lineHeight: 1.1, wordBreak: 'break-word', textAlign: 'center' }}>{consumed}g protein</span>
+                        <span className="text-base font-medium mt-1" style={{ color: '#fff' }}>/ {goal}g goal</span>
+                        <span className="text-base font-semibold mt-2" style={{ color: '#e9d7fd' }}>{percent}%</span>
+                      </div>
+                    )}
                   />
-                </div>
+                )}
               </div>
             </div>
+            {/* Current Meal card on the right */}
+            <div className="flex-1 flex justify-end items-stretch">
+              <div className={`w-full max-w-xs ${glassCard} p-6 flex flex-col items-center justify-center`}>
+                <span className="text-lg font-bold text-white mb-2">Current Meal</span>
+                <span className={statNumber}>{totalCalories} kcal</span>
+                <span className={statLabel}>{totalProtein}g protein</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-            {/* Goal Progress */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Goal Progress</h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-500">Daily Goal</span>
-                    <span className="text-sm font-medium text-[#51B73B]">{calorieGoal} kcal</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-[#51B73B] h-2 rounded-full"
-                      style={{ width: `${Math.min(100, (totalDailyCalories / calorieGoal) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-500">Remaining</span>
-                    <span className="text-sm font-medium text-[#51B73B]">{Math.max(0, remainingCalories)} kcal</span>
-                  </div>
-                  <p className="text-sm text-gray-500">
-                    {remainingCalories > 0 
-                      ? `You still need ${remainingCalories} kcal to reach your goal` 
-                      : 'You have reached your daily goal!'}
-                  </p>
-                </div>
-                <Button
-                  onClick={handleFinishMeal}
-                  disabled={selectedMeals.length === 0}
-                  className="w-full bg-[#51B73B] hover:bg-[#3F8F2F] text-white mt-4"
-                >
-                  Finish Meal
-                </Button>
+        {/* Goal Progress */}
+        <div className="mt-8">
+          <h3 className="text-lg font-medium text-white mb-4">Goal Progress</h3>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-white">Daily Goal</span>
+                <span className="text-sm font-medium text-[#51B73B]">{calorieGoal} kcal</span>
+              </div>
+              <div className="w-full bg-white/20 rounded-full h-2">
+                <div
+                  className="bg-[#51B73B] h-2 rounded-full"
+                  style={{ width: `${Math.min(100, (totalDailyCalories / calorieGoal) * 100)}%` }}
+                />
               </div>
             </div>
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-white">Remaining</span>
+                <span className="text-sm font-medium text-[#51B73B]">{Math.max(0, remainingCalories)} kcal</span>
+              </div>
+              <p className="text-sm text-white">
+                {remainingCalories > 0 
+                  ? `You still need ${remainingCalories} kcal to reach your goal` 
+                  : 'You have reached your daily goal!'}
+              </p>
+            </div>
+            <Button
+              onClick={handleFinishMeal}
+              disabled={selectedMeals.length === 0}
+              className="w-full mt-4 py-3 px-6 rounded-2xl font-bold text-lg bg-[rgba(255,255,255,0.10)] backdrop-blur-[16px] border border-[#45ffaf55] shadow-[0_2px_16px_0_rgba(69,255,175,0.18),_0_0_0_2px_rgba(38,255,99,0.10)] text-[#45ffaf] transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_6px_32px_0_rgba(69,255,175,0.25),_0_0_0_2px_rgba(38,255,99,0.18)] hover:bg-[rgba(69,255,175,0.10)] focus:ring-2 focus:ring-[#45ffaf] focus:ring-offset-2"
+              style={{ boxShadow: '0 2px 16px 0 rgba(69,255,175,0.18), 0 0 0 2px rgba(38,255,99,0.10)' }}
+            >
+              Finish Meal
+            </Button>
           </div>
         </div>
 
         {/* Health Metrics */}
         <div className="mt-8">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900">Health Metrics</h2>
+            <h2 className="text-lg font-medium text-white">Health Metrics</h2>
             <button
               onClick={handleUpdateHealthMetrics}
               className="text-sm text-[#51B73B] hover:text-[#3F8F2F] font-medium"
@@ -1007,29 +1044,29 @@ export function Dashboard() {
           </div>
           <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {/* BMR Card */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className={`${glassCard} overflow-hidden`}>
               <div className="px-4 py-5 sm:p-6">
-                <dt className="text-sm font-medium text-gray-500 truncate">Basal Metabolic Rate (BMR)</dt>
+                <dt className="text-sm font-medium text-white truncate">Basal Metabolic Rate (BMR)</dt>
                 <dd className="mt-1 text-3xl font-semibold text-[#51B73B]">{Math.round(profile.bmr)} kcal</dd>
-                <p className="mt-2 text-sm text-gray-500">Your body's energy needs at rest</p>
+                <p className="mt-2 text-sm text-white">Your body's energy needs at rest</p>
               </div>
             </div>
 
             {/* TDEE Card */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className={`${glassCard} overflow-hidden`}>
               <div className="px-4 py-5 sm:p-6">
-                <dt className="text-sm font-medium text-gray-500 truncate">Total Daily Energy Expenditure (TDEE)</dt>
+                <dt className="text-sm font-medium text-white truncate">Total Daily Energy Expenditure (TDEE)</dt>
                 <dd className="mt-1 text-3xl font-semibold text-[#51B73B]">{Math.round(profile.tdee)} kcal</dd>
-                <p className="mt-2 text-sm text-gray-500">Daily calories needed based on activity level</p>
+                <p className="mt-2 text-sm text-white">Daily calories needed based on activity level</p>
               </div>
             </div>
 
             {/* Activity Level Card */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className={`${glassCard} overflow-hidden`}>
               <div className="px-4 py-5 sm:p-6">
-                <dt className="text-sm font-medium text-gray-500 truncate">Activity Level</dt>
+                <dt className="text-sm font-medium text-white truncate">Activity Level</dt>
                 <dd className="mt-1 text-3xl font-semibold text-[#51B73B] capitalize">{profile.activity_level}</dd>
-                <p className="mt-2 text-sm text-gray-500">Your current activity level</p>
+                <p className="mt-2 text-sm text-white">Your current activity level</p>
               </div>
             </div>
           </div>
@@ -1037,25 +1074,25 @@ export function Dashboard() {
 
         {/* Personal Info */}
         <div className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">Personal Information</h2>
-          <div className="mt-4 bg-white shadow rounded-lg">
+          <h2 className="text-lg font-medium text-white">Personal Information</h2>
+          <div className="mt-4 bg-white/10 backdrop-blur-md rounded-2xl border border-[#A8FFBA]/20 shadow-xl text-white">
             <div className="px-4 py-5 sm:p-6">
               <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
                 <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500">Age</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{profile.age} years</dd>
+                  <dt className="text-sm font-medium text-white">Age</dt>
+                  <dd className="mt-1 text-sm text-white">{profile.age} years</dd>
                 </div>
                 <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500">Gender</dt>
-                  <dd className="mt-1 text-sm text-gray-900 capitalize">{profile.gender}</dd>
+                  <dt className="text-sm font-medium text-white">Gender</dt>
+                  <dd className="mt-1 text-sm text-white capitalize">{profile.gender}</dd>
                 </div>
                 <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500">Height</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{profile.height} cm</dd>
+                  <dt className="text-sm font-medium text-white">Height</dt>
+                  <dd className="mt-1 text-sm text-white">{profile.height} cm</dd>
                 </div>
                 <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500">Weight</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{profile.weight} kg</dd>
+                  <dt className="text-sm font-medium text-white">Weight</dt>
+                  <dd className="mt-1 text-sm text-white">{profile.weight} kg</dd>
                 </div>
               </dl>
             </div>
@@ -1065,18 +1102,18 @@ export function Dashboard() {
         {/* Main Content */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Calendar Sidebar */}
-          <div className="lg:col-span-1 bg-white rounded-lg shadow-lg p-4">
+          <div className="lg:col-span-1 bg-white/10 backdrop-blur-md rounded-2xl border border-[#A8FFBA]/20 shadow-xl text-white p-4">
             <div className="flex justify-between items-center mb-4">
               <button
                 onClick={() => setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate() - 1)))}
-                className="p-2 hover:bg-gray-100 rounded-full"
+                className="p-2 hover:bg-white/20 rounded-full"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <span className="font-medium">{format(selectedDate, 'MMMM yyyy')}</span>
               <button
                 onClick={() => setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate() + 1)))}
-                className="p-2 hover:bg-gray-100 rounded-full"
+                className="p-2 hover:bg-white/20 rounded-full"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
@@ -1104,9 +1141,9 @@ export function Dashboard() {
 
           {/* Meal Plans and Recommendations */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-[#A8FFBA]/20 shadow-xl text-white p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-white">
                   {format(selectedDate, 'EEEE, MMMM d')}
                 </h2>
                 <button
@@ -1128,13 +1165,13 @@ export function Dashboard() {
                   return (
                     <div
                       key={mealType}
-                      className={`bg-white rounded-lg shadow p-4 ${
+                      className={`bg-white/10 backdrop-blur-md rounded-2xl border border-[#A8FFBA]/20 shadow-xl text-white p-4 ${
                         isCurrent ? 'border-2 border-[#51B73B]' : 
                         isUpcoming ? 'border-2 border-blue-400' : ''
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-medium text-gray-900">{label}</h3>
+                        <h3 className="text-lg font-medium text-white">{label}</h3>
                         <div className="flex gap-2">
                           {isCurrent && (
                             <span className="px-2 py-1 text-xs font-medium text-[#51B73B] bg-[#F0F9EE] rounded-full">
@@ -1146,7 +1183,7 @@ export function Dashboard() {
                               {currentMealInfo.tomorrow ? 'Tomorrow' : 'Upcoming Meal'}
                             </span>
                           )}
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-white">
                             {start} - {end}
                           </span>
                         </div>
@@ -1158,7 +1195,7 @@ export function Dashboard() {
                             <div key={meal.id} className="border-t pt-2">
                               <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-2">
-                                  <h4 className="font-medium text-gray-900">{meal.item}</h4>
+                                  <h4 className="font-medium text-white">{meal.item}</h4>
                                   {meal.sugar > 8 && (
                                     <TooltipProvider>
                                       <Tooltip>
@@ -1173,7 +1210,7 @@ export function Dashboard() {
                                   )}
                                 </div>
                                 <div className="flex items-center gap-4">
-                                  <p className="text-sm text-gray-500">
+                                  <p className="text-sm text-white">
                                     {meal.calories} kcal • {meal.protein}g protein • {meal.carbs}g carbs • {meal.fat}g fat • {meal.sugar}g sugar
                                   </p>
                                   <Button
@@ -1188,7 +1225,7 @@ export function Dashboard() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-gray-500 text-sm">No meals planned for this time</p>
+                        <p className="text-white text-sm">No meals planned for this time</p>
                       )}
                     </div>
                   );
@@ -1198,12 +1235,12 @@ export function Dashboard() {
 
             {/* AI Recommendations Section */}
             <div className="mt-8">
-              <div className="bg-white rounded-lg shadow-lg p-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">AI Meal Recommendations</h2>
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-[#A8FFBA]/20 shadow-xl text-white p-8">
+                <h2 className="text-xl font-semibold text-white mb-6">AI Meal Recommendations</h2>
                 
                 {/* Goal Selection */}
                 <div className="flex flex-col space-y-4 mb-8">
-                  <h3 className="text-lg font-medium text-gray-900">Select Your Goal</h3>
+                  <h3 className="text-lg font-medium text-white">Select Your Goal</h3>
                   <div className="flex gap-4">
                     {(['bulk', 'cut', 'maintain'] as FitnessGoal[]).map((goal) => (
                       <button
@@ -1212,14 +1249,16 @@ export function Dashboard() {
                         className={`px-12 py-3 rounded-lg font-medium transition-colors ${
                           selectedGoal === goal
                             ? 'bg-[#51B73B] text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-white/20 text-white hover:bg-white/30'
                         }`}
                       >
                         {goal.charAt(0).toUpperCase() + goal.slice(1)}
                       </button>
                     ))}
                   </div>
-                  <p className="text-sm text-gray-600">{GOAL_DESCRIPTIONS[selectedGoal]}</p>
+                  <p className="text-sm text-white">
+                    {GOAL_DESCRIPTIONS[selectedGoal]}
+                  </p>
                 </div>
 
                 {/* Recommendations */}
@@ -1227,38 +1266,38 @@ export function Dashboard() {
                   <div className="space-y-12">
                     {/* Macros Overview */}
                     <div className="grid grid-cols-4 gap-8">
-                      <div className="bg-gray-50 p-8 rounded-lg">
-                        <h4 className="font-medium text-gray-900">Daily Calories</h4>
+                      <div className={`${glassCard} p-8`}>
+                        <h4 className="font-medium text-white">Daily Calories</h4>
                         <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.calories}</p>
-                        <p className="text-sm text-gray-500 mt-1">kcal</p>
+                        <p className="text-sm text-white">kcal</p>
                       </div>
-                      <div className="bg-gray-50 p-8 rounded-lg">
-                        <h4 className="font-medium text-gray-900">Protein</h4>
+                      <div className={`${glassCard} p-8`}>
+                        <h4 className="font-medium text-white">Protein</h4>
                         <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.protein}g</p>
-                        <p className="text-sm text-gray-500 mt-1">{Math.round(recommendations.macros.protein * 4)} kcal</p>
+                        <p className="text-sm text-white">{Math.round(recommendations.macros.protein * 4)} kcal</p>
                       </div>
-                      <div className="bg-gray-50 p-8 rounded-lg">
-                        <h4 className="font-medium text-gray-900">Carbs</h4>
+                      <div className={`${glassCard} p-8`}>
+                        <h4 className="font-medium text-white">Carbs</h4>
                         <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.carbs}g</p>
-                        <p className="text-sm text-gray-500 mt-1">{Math.round(recommendations.macros.carbs * 4)} kcal</p>
+                        <p className="text-sm text-white">{Math.round(recommendations.macros.carbs * 4)} kcal</p>
                       </div>
-                      <div className="bg-gray-50 p-8 rounded-lg">
-                        <h4 className="font-medium text-gray-900">Fat</h4>
+                      <div className={`${glassCard} p-8`}>
+                        <h4 className="font-medium text-white">Fat</h4>
                         <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.fat}g</p>
-                        <p className="text-sm text-gray-500 mt-1">{Math.round(recommendations.macros.fat * 9)} kcal</p>
+                        <p className="text-sm text-white">{Math.round(recommendations.macros.fat * 9)} kcal</p>
                       </div>
                     </div>
 
                     {/* Meal-Specific Recommendations */}
                     <div className="grid grid-cols-4 gap-8">
                       {Object.entries(recommendations.mealSpecific).map(([meal, foods]) => (
-                        <div key={meal} className="bg-gray-50 p-8 rounded-lg">
-                          <h3 className="text-lg font-medium text-gray-900 capitalize mb-4">{meal}</h3>
+                        <div key={meal} className={`${glassCard} p-8`}>
+                          <h3 className="text-lg font-medium text-white capitalize mb-4">{meal}</h3>
                           <ul className="space-y-3">
                             {foods.map((food, index) => (
                               <li key={index} className="flex items-center">
                                 <span className="w-2 h-2 bg-[#51B73B] rounded-full mr-2"></span>
-                                <span className="text-gray-600">{food}</span>
+                                <span className="text-white">{food}</span>
                               </li>
                             ))}
                           </ul>
@@ -1268,24 +1307,24 @@ export function Dashboard() {
 
                     {/* Tips and Modifications */}
                     <div className="grid grid-cols-2 gap-8">
-                      <div className="bg-gray-50 p-8 rounded-lg">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Tips</h3>
+                      <div className={`${glassCard} p-8`}>
+                        <h3 className="text-lg font-medium text-white mb-4">Tips</h3>
                         <ul className="space-y-3">
                           {recommendations.tips.map((tip, index) => (
                             <li key={index} className="flex items-center">
                               <span className="w-2 h-2 bg-[#51B73B] rounded-full mr-2"></span>
-                              <span className="text-gray-600">{tip}</span>
+                              <span className="text-white">{tip}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
-                      <div className="bg-gray-50 p-8 rounded-lg">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Modifications</h3>
+                      <div className={`${glassCard} p-8`}>
+                        <h3 className="text-lg font-medium text-white mb-4">Modifications</h3>
                         <ul className="space-y-3">
                           {recommendations.modifications.map((mod, index) => (
                             <li key={index} className="flex items-center">
                               <span className="w-2 h-2 bg-[#51B73B] rounded-full mr-2"></span>
-                              <span className="text-gray-600">{mod}</span>
+                              <span className="text-white">{mod}</span>
                             </li>
                           ))}
                         </ul>

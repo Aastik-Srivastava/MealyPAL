@@ -76,107 +76,109 @@ export function BMRCalculator() {
   }
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-[#51B73B]">Calculate Your BMR</h2>
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="age" className="block text-sm font-medium text-gray-700">
-            Age
-          </label>
-          <input
-            type="number"
-            id="age"
-            name="age"
-            required
-            min="1"
-            max="120"
-            value={formData.age}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#51B73B] focus:ring-[#51B73B]"
-          />
-        </div>
-        <div>
-          <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
-            Gender
-          </label>
-          <select
-            id="gender"
-            name="gender"
-            required
-            value={formData.gender}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#51B73B] focus:ring-[#51B73B]"
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#10151a] via-[#19391a] to-[#0c1a13] font-sans text-gray-300 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full mx-auto bg-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl border border-[#A8FFBA]/30 p-8 md:p-14">
+        <h2 className="text-2xl font-bold mb-6 text-white font-display tracking-tight leading-tight text-center">Calculate Your BMR</h2>
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="age" className="block text-sm font-medium text-gray-300">
+              Age
+            </label>
+            <input
+              type="number"
+              id="age"
+              name="age"
+              required
+              min="1"
+              max="120"
+              value={formData.age}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-xl border border-gray-700 bg-white/5 placeholder-gray-400 text-gray-100 focus:outline-none focus:ring-[#A8FFBA] focus:border-[#A8FFBA] focus:z-10 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label htmlFor="gender" className="block text-sm font-medium text-gray-300">
+              Gender
+            </label>
+            <select
+              id="gender"
+              name="gender"
+              required
+              value={formData.gender}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-xl border border-gray-700 bg-white/5 placeholder-gray-400 text-gray-100 focus:outline-none focus:ring-[#A8FFBA] focus:border-[#A8FFBA] focus:z-10 sm:text-sm"
+            >
+              <option value="">Select gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="height" className="block text-sm font-medium text-gray-300">
+              Height (cm)
+            </label>
+            <input
+              type="number"
+              id="height"
+              name="height"
+              required
+              min="1"
+              max="300"
+              value={formData.height}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-xl border border-gray-700 bg-white/5 placeholder-gray-400 text-gray-100 focus:outline-none focus:ring-[#A8FFBA] focus:border-[#A8FFBA] focus:z-10 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label htmlFor="weight" className="block text-sm font-medium text-gray-300">
+              Weight (kg)
+            </label>
+            <input
+              type="number"
+              id="weight"
+              name="weight"
+              required
+              min="1"
+              max="500"
+              value={formData.weight}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-xl border border-gray-700 bg-white/5 placeholder-gray-400 text-gray-100 focus:outline-none focus:ring-[#A8FFBA] focus:border-[#A8FFBA] focus:z-10 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label htmlFor="activity_level" className="block text-sm font-medium text-gray-300">
+              Activity Level
+            </label>
+            <select
+              id="activity_level"
+              name="activity_level"
+              required
+              value={formData.activity_level}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-xl border border-gray-700 bg-white/5 placeholder-gray-400 text-gray-100 focus:outline-none focus:ring-[#A8FFBA] focus:border-[#A8FFBA] focus:z-10 sm:text-sm"
+            >
+              <option value="">Select activity level</option>
+              <option value="sedentary">Sedentary (little or no exercise)</option>
+              <option value="lightly_active">Lightly Active (1-3 days/week)</option>
+              <option value="moderately_active">Moderately Active (3-5 days/week)</option>
+              <option value="very_active">Very Active (6-7 days/week)</option>
+              <option value="extra_active">Extra Active (very active & physical job)</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white bg-[#A8FFBA] hover:bg-[#51B73B] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#A8FFBA] disabled:opacity-50 transition-all"
           >
-            <option value="">Select gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor="height" className="block text-sm font-medium text-gray-700">
-            Height (cm)
-          </label>
-          <input
-            type="number"
-            id="height"
-            name="height"
-            required
-            min="1"
-            max="300"
-            value={formData.height}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#51B73B] focus:ring-[#51B73B]"
-          />
-        </div>
-        <div>
-          <label htmlFor="weight" className="block text-sm font-medium text-gray-700">
-            Weight (kg)
-          </label>
-          <input
-            type="number"
-            id="weight"
-            name="weight"
-            required
-            min="1"
-            max="500"
-            value={formData.weight}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#51B73B] focus:ring-[#51B73B]"
-          />
-        </div>
-        <div>
-          <label htmlFor="activity_level" className="block text-sm font-medium text-gray-700">
-            Activity Level
-          </label>
-          <select
-            id="activity_level"
-            name="activity_level"
-            required
-            value={formData.activity_level}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#51B73B] focus:ring-[#51B73B]"
-          >
-            <option value="">Select activity level</option>
-            <option value="sedentary">Sedentary (little or no exercise)</option>
-            <option value="lightly_active">Lightly Active (1-3 days/week)</option>
-            <option value="moderately_active">Moderately Active (3-5 days/week)</option>
-            <option value="very_active">Very Active (6-7 days/week)</option>
-            <option value="extra_active">Extra Active (very active & physical job)</option>
-          </select>
-        </div>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#51B73B] hover:bg-[#3F8F2F] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#51B73B] disabled:opacity-50"
-        >
-          {isSubmitting ? 'Calculating...' : 'Calculate BMR'}
-        </button>
-      </form>
+            {isSubmitting ? 'Calculating...' : 'Calculate BMR'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

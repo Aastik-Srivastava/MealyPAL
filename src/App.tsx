@@ -5,7 +5,8 @@ import { SignUp } from './components/auth/SignUp';
 import { BMRCalculator } from './components/auth/BMRCalculator';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { AuthGuard } from './components/auth/AuthGuard';
-import { HomePage } from './components/landing/HomePage';
+import { LandingPage } from './components/landing/LandingPage';
+import { CursorParticles } from './components/landing/CursorParticles';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -24,7 +25,10 @@ function AppRoutes() {
       <Route
         path="/"
         element={
-          user ? <Navigate to="/dashboard" replace /> : <HomePage />
+          user ? <Navigate to="/dashboard" replace /> : <>
+            <CursorParticles />
+            <LandingPage />
+          </>
         }
       />
       <Route

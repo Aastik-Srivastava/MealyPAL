@@ -1,0 +1,29 @@
+/* Glassmorphism inner shadow for hero card */
+.hero-inner-shadow {
+  box-shadow: 0 4px 32px 0 rgba(168,255,186,0.10), 0 1.5px 8px 0 rgba(0,0,0,0.18) inset;
+  position: relative;
+}
+
+/* Animated gradient shimmer for hero heading */
+.hero-shimmer {
+  background-size: 200% auto;
+  animation: shimmer-move 2.5s linear infinite;
+}
+.hero-shimmer-gradient {
+  background: linear-gradient(90deg, #A8FFBA 0%, #fff 50%, #A8FFBA 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+  animation: shimmer-move 2.5s linear infinite;
+}
+
+@keyframes shimmer-move {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+} 
