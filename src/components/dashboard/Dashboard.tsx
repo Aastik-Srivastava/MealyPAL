@@ -23,6 +23,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import LiquidFillMeter from './LiquidFillMeter';
+import { ZapierChatbot } from './ZapierChatbot';
 
 ChartJS.register(
   CategoryScale,
@@ -167,10 +168,10 @@ const calculateMacros = (tdee: number, goal: FitnessGoal, weight: number) => {
 };
 
 // --- Card Glassmorphism Utility Classes ---
-const glassCard = "bg-[rgba(124,251,139,0.08)] backdrop-blur-[18px] rounded-2xl border border-[#7cfb8b]/30 shadow-[0_2px_16px_0_rgba(124,251,139,0.10)] text-white";
-const statNumber = "text-4xl md:text-5xl font-extrabold text-[#7cfb8b] drop-shadow-lg leading-tight";
+  const glassCard = "bg-[rgba(255,255,255,0.15)] backdrop-blur-[18px] rounded-2xl border border-[#7cfb8b]/40 shadow-[0_2px_16px_0_rgba(124,251,139,0.15)] text-white";
+  const statNumber = "text-4xl md:text-5xl font-extrabold text-[#8aff9e] drop-shadow-lg leading-tight";
 const statLabel = "text-base font-medium text-white/90";
-const statSub = "text-lg font-semibold text-[#7cfb8b] mt-2 text-white/90";
+  const statSub = "text-lg font-semibold text-[#8aff9e] mt-2 text-white/90";
 const listText = "text-white text-lg leading-relaxed drop-shadow-sm";
 const listBullet = "w-2 h-2 bg-[#45ffaf] rounded-full mr-3 inline-block";
 const cardHeading = "text-xl font-bold text-white mb-4 drop-shadow";
@@ -858,7 +859,7 @@ export function Dashboard() {
   }
 
   return (
-    <div className="relative min-h-screen font-sans text-white bg-gradient-to-br from-[#10151a] via-[#19391a] via-40% to-[#0c1a13] to-90%" style={{
+    <div className="relative min-h-screen font-sans text-white bg-gradient-to-br from-[#1a2f1a] via-[#2a4a2a] via-40% to-[#1e3a1e] to-90%" style={{
       fontFamily: 'Inter, Sora, sans-serif',
       minHeight: '100vh',
     }}>
@@ -895,15 +896,15 @@ export function Dashboard() {
               <div className="flex gap-6 items-center border-r pr-6">
                 <div className="text-center">
                   <p className="text-sm font-medium text-white">Selected Items</p>
-                  <p className="text-2xl font-bold text-[#51B73B]">{selectedMeals.length}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-white">Total Calories</p>
-                  <p className="text-2xl font-bold text-[#51B73B]">{totalCalories}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-white">Total Protein</p>
-                  <p className="text-2xl font-bold text-[#51B73B]">{totalProtein}g</p>
+                                      <p className="text-2xl font-bold text-[#6adc7a]">{selectedMeals.length}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-white">Total Calories</p>
+                    <p className="text-2xl font-bold text-[#6adc7a]">{totalCalories}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-white">Total Protein</p>
+                    <p className="text-2xl font-bold text-[#6adc7a]">{totalProtein}g</p>
                 </div>
               </div>
               <Button
@@ -1000,11 +1001,11 @@ export function Dashboard() {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium text-white">Daily Goal</span>
-                <span className="text-sm font-medium text-[#51B73B]">{calorieGoal} kcal</span>
+                <span className="text-sm font-medium text-[#6adc7a]">{calorieGoal} kcal</span>
               </div>
               <div className="w-full bg-white/20 rounded-full h-2">
                 <div
-                  className="bg-[#51B73B] h-2 rounded-full"
+                  className="bg-[#6adc7a] h-2 rounded-full"
                   style={{ width: `${Math.min(100, (totalDailyCalories / calorieGoal) * 100)}%` }}
                 />
               </div>
@@ -1012,7 +1013,7 @@ export function Dashboard() {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium text-white">Remaining</span>
-                <span className="text-sm font-medium text-[#51B73B]">{Math.max(0, remainingCalories)} kcal</span>
+                <span className="text-sm font-medium text-[#6adc7a]">{Math.max(0, remainingCalories)} kcal</span>
               </div>
               <p className="text-sm text-white">
                 {remainingCalories > 0 
@@ -1037,7 +1038,7 @@ export function Dashboard() {
             <h2 className="text-lg font-medium text-white">Health Metrics</h2>
             <button
               onClick={handleUpdateHealthMetrics}
-              className="text-sm text-[#51B73B] hover:text-[#3F8F2F] font-medium"
+              className="text-sm text-[#6adc7a] hover:text-[#5ac86a] font-medium"
             >
               Update Metrics
             </button>
@@ -1047,7 +1048,7 @@ export function Dashboard() {
             <div className={`${glassCard} overflow-hidden`}>
               <div className="px-4 py-5 sm:p-6">
                 <dt className="text-sm font-medium text-white truncate">Basal Metabolic Rate (BMR)</dt>
-                <dd className="mt-1 text-3xl font-semibold text-[#51B73B]">{Math.round(profile.bmr)} kcal</dd>
+                <dd className="mt-1 text-3xl font-semibold text-[#6adc7a]">{Math.round(profile.bmr)} kcal</dd>
                 <p className="mt-2 text-sm text-white">Your body's energy needs at rest</p>
               </div>
             </div>
@@ -1056,7 +1057,7 @@ export function Dashboard() {
             <div className={`${glassCard} overflow-hidden`}>
               <div className="px-4 py-5 sm:p-6">
                 <dt className="text-sm font-medium text-white truncate">Total Daily Energy Expenditure (TDEE)</dt>
-                <dd className="mt-1 text-3xl font-semibold text-[#51B73B]">{Math.round(profile.tdee)} kcal</dd>
+                <dd className="mt-1 text-3xl font-semibold text-[#6adc7a]">{Math.round(profile.tdee)} kcal</dd>
                 <p className="mt-2 text-sm text-white">Daily calories needed based on activity level</p>
               </div>
             </div>
@@ -1065,7 +1066,7 @@ export function Dashboard() {
             <div className={`${glassCard} overflow-hidden`}>
               <div className="px-4 py-5 sm:p-6">
                 <dt className="text-sm font-medium text-white truncate">Activity Level</dt>
-                <dd className="mt-1 text-3xl font-semibold text-[#51B73B] capitalize">{profile.activity_level}</dd>
+                <dd className="mt-1 text-3xl font-semibold text-[#6adc7a] capitalize">{profile.activity_level}</dd>
                 <p className="mt-2 text-sm text-white">Your current activity level</p>
               </div>
             </div>
@@ -1248,7 +1249,7 @@ export function Dashboard() {
                         onClick={() => setSelectedGoal(goal)}
                         className={`px-12 py-3 rounded-lg font-medium transition-colors ${
                           selectedGoal === goal
-                            ? 'bg-[#51B73B] text-white'
+                            ? 'bg-[#6adc7a] text-white'
                             : 'bg-white/20 text-white hover:bg-white/30'
                         }`}
                       >
@@ -1268,22 +1269,22 @@ export function Dashboard() {
                     <div className="grid grid-cols-4 gap-8">
                       <div className={`${glassCard} p-8`}>
                         <h4 className="font-medium text-white">Daily Calories</h4>
-                        <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.calories}</p>
+                        <p className="text-4xl font-bold text-[#6adc7a] mt-2">{recommendations.macros.calories}</p>
                         <p className="text-sm text-white">kcal</p>
                       </div>
                       <div className={`${glassCard} p-8`}>
                         <h4 className="font-medium text-white">Protein</h4>
-                        <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.protein}g</p>
+                        <p className="text-4xl font-bold text-[#6adc7a] mt-2">{recommendations.macros.protein}g</p>
                         <p className="text-sm text-white">{Math.round(recommendations.macros.protein * 4)} kcal</p>
                       </div>
                       <div className={`${glassCard} p-8`}>
                         <h4 className="font-medium text-white">Carbs</h4>
-                        <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.carbs}g</p>
+                        <p className="text-4xl font-bold text-[#6adc7a] mt-2">{recommendations.macros.carbs}g</p>
                         <p className="text-sm text-white">{Math.round(recommendations.macros.carbs * 4)} kcal</p>
                       </div>
                       <div className={`${glassCard} p-8`}>
                         <h4 className="font-medium text-white">Fat</h4>
-                        <p className="text-4xl font-bold text-[#51B73B] mt-2">{recommendations.macros.fat}g</p>
+                        <p className="text-4xl font-bold text-[#6adc7a] mt-2">{recommendations.macros.fat}g</p>
                         <p className="text-sm text-white">{Math.round(recommendations.macros.fat * 9)} kcal</p>
                       </div>
                     </div>
@@ -1296,7 +1297,7 @@ export function Dashboard() {
                           <ul className="space-y-3">
                             {foods.map((food, index) => (
                               <li key={index} className="flex items-center">
-                                <span className="w-2 h-2 bg-[#51B73B] rounded-full mr-2"></span>
+                                <span className="w-2 h-2 bg-[#6adc7a] rounded-full mr-2"></span>
                                 <span className="text-white">{food}</span>
                               </li>
                             ))}
@@ -1310,23 +1311,23 @@ export function Dashboard() {
                       <div className={`${glassCard} p-8`}>
                         <h3 className="text-lg font-medium text-white mb-4">Tips</h3>
                         <ul className="space-y-3">
-                          {recommendations.tips.map((tip, index) => (
-                            <li key={index} className="flex items-center">
-                              <span className="w-2 h-2 bg-[#51B73B] rounded-full mr-2"></span>
-                              <span className="text-white">{tip}</span>
-                            </li>
-                          ))}
+                                                      {recommendations.tips.map((tip, index) => (
+                              <li key={index} className="flex items-center">
+                                <span className="w-2 h-2 bg-[#6adc7a] rounded-full mr-2"></span>
+                                <span className="text-white">{tip}</span>
+                              </li>
+                            ))}
                         </ul>
                       </div>
                       <div className={`${glassCard} p-8`}>
                         <h3 className="text-lg font-medium text-white mb-4">Modifications</h3>
                         <ul className="space-y-3">
-                          {recommendations.modifications.map((mod, index) => (
-                            <li key={index} className="flex items-center">
-                              <span className="w-2 h-2 bg-[#51B73B] rounded-full mr-2"></span>
-                              <span className="text-white">{mod}</span>
-                            </li>
-                          ))}
+                                                      {recommendations.modifications.map((mod, index) => (
+                              <li key={index} className="flex items-center">
+                                <span className="w-2 h-2 bg-[#6adc7a] rounded-full mr-2"></span>
+                                <span className="text-white">{mod}</span>
+                              </li>
+                            ))}
                         </ul>
                       </div>
                     </div>
@@ -1337,6 +1338,9 @@ export function Dashboard() {
           </div>
         </div>
       </div>
+      
+      {/* Zapier Chatbot */}
+      <ZapierChatbot chatbotId="cmdn65jpx000dfawvaf0ea4o3" />
     </div>
   );
 } 
