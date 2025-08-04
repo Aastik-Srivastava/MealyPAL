@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Leaf, Heart, Clock, Star, ChevronRight, Check, BrainCircuit, SlidersHorizontal, Zap } from "lucide-react";
+import { Leaf, Heart, Clock, Star, ChevronRight, Check, BrainCircuit, SlidersHorizontal, Zap, Upload, Target, Users, MessageSquare, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import { CursorParticles } from './CursorParticles';
+import { ThreeLeafLogo } from './ThreeLeafLogo';
 import './hero-shimmer.css'; // Add this import for custom shimmer/inner-shadow styles
 import * as THREE from "three";
 import NET from "vanta/dist/vanta.net.min";
@@ -24,18 +25,16 @@ const hoverEffect = {
 };
 
 export function LandingPage() {
+  const problemRef = useRef(null);
+  const problemInView = useInView(problemRef, { once: true, amount: 0.2 });
+  const howItWorksRef = useRef(null);
+  const howItWorksInView = useInView(howItWorksRef, { once: true, amount: 0.2 });
   const featuresRef = useRef(null);
   const featuresInView = useInView(featuresRef, { once: true, amount: 0.2 });
-  const testimonialsRef = useRef(null);
-  const testimonialsInView = useInView(testimonialsRef, { once: true, amount: 0.2 });
-  const faqRef = useRef(null);
-  const faqInView = useInView(faqRef, { once: true, amount: 0.2 });
   const pricingRef = useRef(null);
   const pricingInView = useInView(pricingRef, { once: true, amount: 0.2 });
   const ctaRef = useRef(null);
   const ctaInView = useInView(ctaRef, { once: true, amount: 0.2 });
-  const edgeRef = useRef(null);
-  const edgeInView = useInView(edgeRef, { once: true, amount: 0.2 });
 
   // Vanta background setup
   const vantaRef = useRef<HTMLDivElement>(null);
@@ -108,10 +107,12 @@ export function LandingPage() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
-          >
-            Your Personal
-            <br className="hidden md:block" />
-            <span className="hero-shimmer-gradient">Meal Planning Assistant</span>
+                      >
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <ThreeLeafLogo size={64} className="drop-shadow-lg" />
+                <span className="text-[#A8FFBA] font-bold text-5xl md:text-7xl">MealyPal</span>
+              </div>
+              <span className="hero-shimmer-gradient text-3xl md:text-4xl">Your Personal Meal Planning Assistant</span>
           </motion.h1>
           <motion.p
             className="text-lg md:text-xl text-gray-200 mb-8 text-center"
@@ -119,7 +120,7 @@ export function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut', delay: 0.25 }}
           >
-            Plan your meals, track your nutrition, and achieve your health goals with our AI-powered meal planning assistant.
+            Simplify fitness and nutrition tracking for people eating fixed, repetitive menus — like in hostels, PGs, and corporate messes.
           </motion.p>
           <motion.div
             className="flex flex-col sm:flex-row gap-4 w-full justify-center"
@@ -130,7 +131,7 @@ export function LandingPage() {
             <motion.div whileHover={hoverEffect} className="transition-transform">
               <Button asChild size="lg" className="w-full sm:w-auto px-8 py-3 rounded-xl font-bold text-lg bg-[#A8FFBA] text-[#10151a] shadow-lg border border-transparent">
                 <Link to="/signup" className="flex items-center gap-2">
-                  Get Started <ChevronRight />
+                  Get Started Free <ChevronRight />
                 </Link>
               </Button>
             </motion.div>
@@ -140,43 +141,113 @@ export function LandingPage() {
               </Button>
             </motion.div>
           </motion.div>
+          <motion.p
+            className="text-sm text-gray-400 mt-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.7 }}
+          >
+            Only ₹30/month after free trial
+          </motion.p>
         </motion.div>
       </section>
 
-      {/* New "Our Edge" Section */}
-      <section id="edge" ref={edgeRef} className="py-16 md:py-24">
+      {/* Problem & Solution Section */}
+      <section id="problem" ref={problemRef} className="py-16 md:py-24">
         <motion.div
           className="max-w-7xl mx-auto px-4"
           initial="hidden"
-          animate={edgeInView ? "visible" : "hidden"}
+          animate={problemInView ? "visible" : "hidden"}
+          variants={sectionVariant}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* The Problem */}
+            <motion.div whileHover={{ scale: 1.01 }} className="transition-transform">
+              <Card className="bg-white/10 hover:bg-transparent backdrop-blur-md rounded-2xl overflow-hidden p-8 shadow-xl border border-[#A8FFBA]/20 text-gray-300 transition-colors">
+                <div className="flex items-center mb-6">
+                  <div className="bg-red-500/20 p-3 rounded-full mr-4">
+                    <MessageSquare className="h-8 w-8 text-red-400" />
+                  </div>
+                  <CardTitle className="text-white text-2xl font-bold">The Problem</CardTitle>
+                </div>
+                <CardDescription className="text-gray-300 text-lg leading-relaxed">
+                  College students and working professionals eating in messes or canteens often lack awareness of the nutritional content of their meals. Manual logging is tedious, and generic fitness apps don't align with fixed menu-based eating.
+                </CardDescription>
+              </Card>
+            </motion.div>
+
+            {/* The Solution */}
+            <motion.div whileHover={{ scale: 1.01 }} className="transition-transform">
+              <Card className="bg-white/10 hover:bg-transparent backdrop-blur-md rounded-2xl overflow-hidden p-8 shadow-xl border border-[#A8FFBA]/20 text-gray-300 transition-colors">
+                <div className="flex items-center mb-6">
+                  <div className="bg-[#A8FFBA]/20 p-3 rounded-full mr-4">
+                    <Target className="h-8 w-8 text-[#A8FFBA]" />
+                  </div>
+                  <CardTitle className="text-white text-2xl font-bold">The Solution</CardTitle>
+                </div>
+                <CardDescription className="text-gray-300 text-lg leading-relaxed">
+                  Mealypal is an AI-powered web app that simplifies fitness and nutrition tracking for people eating fixed, repetitive menus. We automate calorie and macro tracking, offer fitness-aligned insights, and make meal planning effortless with just one weekly menu upload.
+                </CardDescription>
+              </Card>
+            </motion.div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* How It Works Section */}
+      <section id="how-it-works" ref={howItWorksRef} className="py-16 md:py-24">
+        <motion.div
+          className="max-w-7xl mx-auto px-4"
+          initial="hidden"
+          animate={howItWorksInView ? "visible" : "hidden"}
           variants={sectionVariant}
         >
           <h2 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight leading-tight text-center mb-16">
-            Our Edge
+            How It Works
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto text-center mb-12">
+            From menu upload to personalized guidance — all automated
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                icon: <BrainCircuit className="h-8 w-8 text-[#A8FFBA] bg-white/10 rounded-full p-1" />,
-                title: "AI-Powered Precision",
-                desc: "Our smart AI analyzes your goals to create perfectly tailored meal plans, optimizing your nutrition.",
+                icon: <Upload className="h-8 w-8 text-[#A8FFBA]" />,
+                title: "Upload Weekly Menu",
+                desc: "Users or mess admins upload their weekly menu (image or text)"
               },
               {
-                icon: <SlidersHorizontal className="h-8 w-8 text-[#A8FFBA] bg-white/10 rounded-full p-1" />,
-                title: "Fully Customizable",
-                desc: "Easily swap meals, adjust macros, and customize your plan to fit your lifestyle and preferences.",
+                icon: <BrainCircuit className="h-8 w-8 text-[#A8FFBA]" />,
+                title: "AI Parses & Calculates",
+                desc: "Mealypal parses the menu and calculates macros per item using our AI engine"
               },
               {
-                icon: <Zap className="h-8 w-8 text-[#A8FFBA] bg-white/10 rounded-full p-1" />,
-                title: "Seamless Experience",
-                desc: "From planning to tracking, our intuitive interface makes managing your nutrition effortless.",
+                icon: <Target className="h-8 w-8 text-[#A8FFBA]" />,
+                title: "Select Fitness Goal",
+                desc: "During onboarding, users select their fitness goal — bulk, cut, or maintain"
               },
-            ].map((f) => (
-              <motion.div whileHover={{ scale: 1.01 }} className="transition-transform">
-                <Card className="bg-white/10 hover:bg-transparent backdrop-blur-md rounded-2xl overflow-hidden p-8 shadow-xl border border-[#A8FFBA]/20 text-gray-300 transition-colors">
-                  <div className="flex items-center justify-center mb-4">{f.icon}</div>
-                  <CardTitle className="text-white text-lg font-bold text-center">{f.title}</CardTitle>
-                  <CardDescription className="text-gray-300 text-center">{f.desc}</CardDescription>
+              {
+                icon: <TrendingUp className="h-8 w-8 text-[#A8FFBA]" />,
+                title: "Smart Macro Allocation",
+                desc: "Based on their BMR & TDEE, the system allocates macros across meals"
+              },
+              {
+                icon: <Users className="h-8 w-8 text-[#A8FFBA]" />,
+                title: "Personalized Guidance",
+                desc: "Users receive personalized daily meal guidance — no manual input required"
+              },
+              {
+                icon: <SlidersHorizontal className="h-8 w-8 text-[#A8FFBA]" />,
+                title: "Clean Web Interface",
+                desc: "All of this happens in a clean, self-serve web interface"
+              }
+            ].map((step, index) => (
+              <motion.div whileHover={{ scale: 1.01 }} className="transition-transform" key={index}>
+                <Card className="bg-white/10 hover:bg-transparent backdrop-blur-md rounded-2xl overflow-hidden p-6 shadow-xl border border-[#A8FFBA]/20 text-gray-300 transition-colors">
+                  <div className="flex items-center justify-center h-16 w-16 rounded-full bg-[#A8FFBA]/20 mx-auto mb-4">
+                    {step.icon}
+                  </div>
+                  <CardTitle className="text-white text-xl font-bold text-center mb-3">{step.title}</CardTitle>
+                  <CardDescription className="text-gray-300 text-center">{step.desc}</CardDescription>
                 </Card>
               </motion.div>
             ))}
@@ -184,8 +255,8 @@ export function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Features Section */}
-      <section id="why" ref={featuresRef} className="py-16 md:py-24">
+      {/* Key Features Section */}
+      <section id="features" ref={featuresRef} className="py-16 md:py-24">
         <motion.div
           className="max-w-7xl mx-auto px-4"
           initial="hidden"
@@ -193,31 +264,48 @@ export function LandingPage() {
           variants={sectionVariant}
         >
           <h2 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight leading-tight text-center mb-16">
-            Why Choose MealyPAL?
+            Key Features
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                icon: <Leaf className="h-8 w-8 text-[#A8FFBA] bg-white/10 rounded-full p-1" />,
-                title: "Personalized Plans",
-                desc: "Get meal plans tailored to your dietary preferences, allergies, and health goals.",
+                icon: <BrainCircuit className="h-6 w-6 text-[#A8FFBA]" />,
+                title: "AI Meal Guidance",
+                desc: "Based on mess menus with personalized recommendations"
               },
               {
-                icon: <Heart className="h-8 w-8 text-[#A8FFBA] bg-white/10 rounded-full p-1" />,
-                title: "Nutrition Tracking",
-                desc: "Monitor your daily nutrition intake and stay on track with your health goals.",
+                icon: <Check className="h-6 w-6 text-[#A8FFBA]" />,
+                title: "Automatic Macro Tracking",
+                desc: "No manual logging required"
               },
               {
-                icon: <Clock className="h-8 w-8 text-[#A8FFBA] bg-white/10 rounded-full p-1" />,
-                title: "Time-Saving",
-                desc: "Save hours of meal planning and grocery shopping with our efficient tools.",
+                icon: <Zap className="h-6 w-6 text-[#A8FFBA]" />,
+                title: "Daily Nudges & Reminders",
+                desc: "GPT-powered fitness insights"
               },
-            ].map((f) => (
-              <motion.div whileHover={{ scale: 1.01 }} className="transition-transform">
-                <Card className="bg-white/10 hover:bg-transparent backdrop-blur-md rounded-2xl overflow-hidden p-8 shadow-xl border border-[#A8FFBA]/20 text-gray-300 transition-colors">
-                  <div className="flex items-center justify-center mb-4">{f.icon}</div>
-                  <CardTitle className="text-white text-lg font-bold text-center">{f.title}</CardTitle>
-                  <CardDescription className="text-gray-300 text-center">{f.desc}</CardDescription>
+              {
+                icon: <Upload className="h-6 w-6 text-[#A8FFBA]" />,
+                title: "Image-based Menu OCR",
+                desc: "Coming soon"
+              },
+              {
+                icon: <Users className="h-6 w-6 text-[#A8FFBA]" />,
+                title: "Gamified Referral System",
+                desc: "Boost organic growth"
+              },
+              {
+                icon: <SlidersHorizontal className="h-6 w-6 text-[#A8FFBA]" />,
+                title: "Self-serve Dashboard",
+                desc: "Clean, intuitive interface"
+              }
+            ].map((feature, index) => (
+              <motion.div whileHover={{ scale: 1.01 }} className="transition-transform" key={index}>
+                <Card className="bg-white/10 hover:bg-transparent backdrop-blur-md rounded-2xl overflow-hidden p-6 shadow-xl border border-[#A8FFBA]/20 text-gray-300 transition-colors">
+                  <div className="flex items-center justify-center h-12 w-12 rounded-md bg-[#A8FFBA]/20 mx-auto mb-4">
+                    {feature.icon}
+                  </div>
+                  <CardTitle className="text-white text-lg font-medium text-center mb-2">{feature.title}</CardTitle>
+                  <CardDescription className="text-gray-300 text-center text-sm">{feature.desc}</CardDescription>
                 </Card>
               </motion.div>
             ))}
@@ -236,6 +324,9 @@ export function LandingPage() {
           <h2 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight leading-tight text-center mb-16">
             Choose Your Plan
           </h2>
+          <p className="text-xl text-gray-300 text-center mb-12">
+            Start with our free tier and upgrade when you're ready for more
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {/* Free Tier */}
             <motion.div whileHover={{ scale: 1.01 }} className="transition-transform">
@@ -253,8 +344,13 @@ export function LandingPage() {
             </motion.div>
             {/* Pro Tier */}
             <motion.div whileHover={{ scale: 1.01 }} className="transition-transform">
-              <Card className="bg-white/10 hover:bg-transparent backdrop-blur-md rounded-2xl overflow-hidden p-8 shadow-xl border border-[#A8FFBA]/20 text-gray-300 transition-colors">
-                <CardTitle className="text-white text-xl font-bold mb-2">Pro Tier</CardTitle>
+              <Card className="bg-white/10 hover:bg-transparent backdrop-blur-md rounded-2xl overflow-hidden p-8 shadow-xl border-2 border-[#A8FFBA] text-gray-300 transition-colors">
+                <div className="flex items-center justify-between mb-4">
+                  <CardTitle className="text-white text-xl font-bold">Pro Tier</CardTitle>
+                  <span className="px-3 py-1 text-sm font-semibold text-[#A8FFBA] bg-[#A8FFBA]/20 rounded-full">
+                    Popular
+                  </span>
+                </div>
                 <p className="text-4xl font-extrabold text-[#A8FFBA] mb-4">₹30 <span className="text-base font-medium text-gray-400">/month</span></p>
                 <ul className="space-y-2 mb-6">
                   <li>AI-powered health recommendations</li>
@@ -271,43 +367,29 @@ export function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" ref={testimonialsRef} className="py-16 md:py-24">
+      {/* CTA Section */}
+      <section id="cta" ref={ctaRef} className="py-16 md:py-24">
         <motion.div
-          className="max-w-7xl mx-auto px-4"
+          className="max-w-4xl mx-auto px-4 text-center"
           initial="hidden"
-          animate={testimonialsInView ? "visible" : "hidden"}
+          animate={ctaInView ? "visible" : "hidden"}
           variants={sectionVariant}
         >
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight leading-tight text-center mb-16">
-            What Our Users Say
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Alex K.",
-                quote: "Helped me stay consistent and simplified my diet! The AI suggestions are spot on.",
-              },
-              {
-                name: "Priya M.",
-                quote: "It's like having a personal nutrition coach on my phone. The meal plans are so convenient!",
-              },
-              {
-                name: "Rahul S.",
-                quote: "The personalized recommendations have made meal planning effortless and effective.",
-              },
-            ].map((t) => (
-              <motion.div whileHover={{ scale: 1.01 }} className="transition-transform">
-                <Card className="bg-white/10 hover:bg-transparent backdrop-blur-md rounded-2xl overflow-hidden p-8 shadow-xl border border-[#A8FFBA]/20 text-gray-300 transition-colors">
-                  <div className="flex items-center mb-4">
-                    <Star className="h-6 w-6 text-[#A8FFBA] bg-white/10 rounded-full p-1" />
-                    <span className="ml-3 text-lg font-bold text-white">{t.name}</span>
-                  </div>
-                  <CardDescription className="text-gray-300">{t.quote}</CardDescription>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+          <motion.div whileHover={{ scale: 1.01 }} className="transition-transform">
+            <Card className="bg-white/10 hover:bg-transparent backdrop-blur-md rounded-2xl overflow-hidden p-12 shadow-xl border border-[#A8FFBA]/20 text-gray-300 transition-colors">
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight leading-tight mb-8">
+                Ready to transform your meal planning?
+              </h2>
+              <p className="text-xl text-gray-300 mb-8">
+                Start your journey today with AI-powered nutrition tracking for fixed menus.
+              </p>
+              <Button asChild size="lg" className="px-8 py-4 rounded-xl font-bold text-lg bg-[#A8FFBA] text-[#10151a] shadow-lg hover:scale-105 hover:shadow-[0_0_10px_#A8FFBA] transition-all">
+                <Link to="/signup" className="flex items-center gap-2">
+                  Get Started Free <ChevronRight />
+                </Link>
+              </Button>
+            </Card>
+          </motion.div>
         </motion.div>
       </section>
 

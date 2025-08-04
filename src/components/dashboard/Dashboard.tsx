@@ -24,6 +24,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import LiquidFillMeter from './LiquidFillMeter';
 import { ZapierChatbot } from './ZapierChatbot';
+import { ThreeLeafLogo } from '../landing/ThreeLeafLogo';
 
 ChartJS.register(
   CategoryScale,
@@ -867,11 +868,14 @@ export function Dashboard() {
         {/* Header with Nutrition Summary */}
         <div className={`mb-8 p-4 ${glassCard}`}>
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-              <p className="mt-1 text-sm text-white">
-                Welcome back, {user?.email}
-              </p>
+            <div className="flex items-center gap-3">
+              <ThreeLeafLogo size={40} className="drop-shadow-lg" />
+              <div>
+                <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+                <p className="mt-1 text-sm text-white">
+                  Welcome back, {user?.email}
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-8">
               {/* Add Sugar Filter Toggle */}
