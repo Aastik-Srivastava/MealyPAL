@@ -18,6 +18,8 @@ export interface FoodItem {
   protein: number
   carbs: number
   fats: number
+  lactose: boolean // true if contains lactose
+  gluten: boolean // true if contains gluten
 }
 
 export interface Meal {
@@ -76,6 +78,8 @@ export interface MealPlan {
   protein: number;
   carbs: number;
   fat: number;
+  lactose: boolean; // true if contains lactose
+  gluten: boolean; // true if contains gluten
   created_at: string;
   updated_at: string;
 }

@@ -1209,6 +1209,30 @@ export function Dashboard() {
                                       </Tooltip>
                                     </TooltipProvider>
                                   )}
+                                  {meal.lactose && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger>
+                                          <AlertTriangle className="h-4 w-4 text-sky-400" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Contains lactose</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                  {meal.gluten && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger>
+                                          <AlertTriangle className="h-4 w-4 text-purple-400" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Contains gluten</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
                                 </div>
                                 <div className="flex items-center gap-4">
                                   <p className="text-sm text-white">

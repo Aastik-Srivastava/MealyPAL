@@ -8,4 +8,6 @@ export interface MealPlan {
   protein: number;
   carbs: number;
   fat: number;
+  lactose: boolean; // true if contains lactose
+  gluten: boolean; // true if contains gluten
 } 

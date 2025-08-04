@@ -31,6 +31,8 @@ CREATE TABLE food_items (
     protein DECIMAL NOT NULL CHECK (protein >= 0),
     carbs DECIMAL NOT NULL CHECK (carbs >= 0),
     fats DECIMAL NOT NULL CHECK (fats >= 0),
+    lactose BOOLEAN NOT NULL DEFAULT false, -- 1 means contains lactose
+    gluten BOOLEAN NOT NULL DEFAULT false, -- 1 means contains gluten
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
