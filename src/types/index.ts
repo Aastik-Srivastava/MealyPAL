@@ -20,6 +20,9 @@ export interface FoodItem {
   fats: number
   lactose: boolean // true if contains lactose
   gluten: boolean // true if contains gluten
+  pcos: boolean // true if PCOS-friendly
+  gutwreaker: boolean // true if gut-wrecking/unhealthy
+  thyroid_friendly: boolean // true if thyroid-friendly
 }
 
 export interface Meal {
@@ -80,6 +83,9 @@ export interface MealPlan {
   fat: number;
   lactose: boolean; // true if contains lactose
   gluten: boolean; // true if contains gluten
+  pcos: boolean; // true if PCOS-friendly
+  gutwreaker: boolean; // true if gut-wrecking/unhealthy
+  thyroid_friendly: boolean; // true if thyroid-friendly
   created_at: string;
   updated_at: string;
 }

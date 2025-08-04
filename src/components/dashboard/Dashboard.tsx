@@ -25,6 +25,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import LiquidFillMeter from './LiquidFillMeter';
 import { ZapierChatbot } from './ZapierChatbot';
 import { ThreeLeafLogo } from '../landing/ThreeLeafLogo';
+import { HealthLegend } from './HealthLegend';
 
 ChartJS.register(
   CategoryScale,
@@ -57,6 +58,11 @@ interface MealPlan {
   carbs: number;
   fat: number;
   sugar: number;
+  lactose: boolean;
+  gluten: boolean;
+  pcos: boolean;
+  gutwreaker: boolean;
+  thyroid_friendly: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -865,6 +871,9 @@ export function Dashboard() {
       minHeight: '100vh',
     }}>
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {/* Health Legend */}
+        <HealthLegend />
+        
         {/* Header with Nutrition Summary */}
         <div className={`mb-8 p-4 ${glassCard}`}>
           <div className="flex justify-between items-center">
@@ -1233,6 +1242,48 @@ export function Dashboard() {
                                         </TooltipTrigger>
                                         <TooltipContent>
                                           <p>Contains gluten</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                  {meal.pcos && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger>
+                                          <div className="h-4 w-4 bg-pink-500 rounded-full flex items-center justify-center">
+                                            <span className="text-white text-xs font-bold">P</span>
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>PCOS-friendly food</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                  {meal.gutwreaker && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger>
+                                          <div className="h-4 w-4 bg-red-500 rounded-full flex items-center justify-center">
+                                            <span className="text-white text-xs font-bold">G</span>
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Gut-wrecking/unhealthy food</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                  {meal.thyroid_friendly && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger>
+                                          <div className="h-4 w-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                            <span className="text-white text-xs font-bold">T</span>
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Thyroid-friendly food</p>
                                         </TooltipContent>
                                       </Tooltip>
                                     </TooltipProvider>
